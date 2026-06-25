@@ -1,4 +1,5 @@
 import { Resend } from 'resend';
+import { Logger } from '@nestjs/common';
 import type { portal } from '@castellar/core';
 
 function escapeHtml(s: string): string {
@@ -11,13 +12,20 @@ function escapeHtml(s: string): string {
 }
 
 export class ResendPortalMailer implements portal.PortalMailer {
-  private readonly resend: Resend;
+  private readonly logger = new Logger(ResendPortalMailer.name);
+  private readonly resend: Resend | null;
   private readonly from: string;
 
   constructor() {
     const apiKey = process.env.RESEND_API_KEY;
-    if (!apiKey) throw new Error('RESEND_API_KEY no definida');
-    this.resend = new Resend(apiKey);
+    if (!apiKey) {
+      this.logger.warn(
+        'RESEND_API_KEY no definida — portal mailer arranca en modo no-op (no se envían emails).',
+      );
+      this.resend = null;
+    } else {
+      this.resend = new Resend(apiKey);
+    }
     this.from = process.env.SMTP_FROM ?? 'no-reply@castellar.app';
   }
 
@@ -28,6 +36,12 @@ export class ResendPortalMailer implements portal.PortalMailer {
     portalUrl: string;
     validHours: number;
   }): Promise<void> {
+    if (!this.resend) {
+      this.logger.warn(
+        `[no-op mailer] would send portal access link to ${args.to} for clinic ${args.clinicName}`,
+      );
+      return;
+    }
     const { error } = await this.resend.emails.send({
       from: this.from,
       to: args.to,

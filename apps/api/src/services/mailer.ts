@@ -1,4 +1,5 @@
 import { Resend } from 'resend';
+import { Logger } from '@nestjs/common';
 import type { identity } from '@castellar/core';
 
 /**
@@ -6,15 +7,27 @@ import type { identity } from '@castellar/core';
  *
  * Email simple en MVP: asunto + cuerpo HTML mínimo. Plantilla React Email
  * llegará en Sprint 2 con `@castellar/mailer`.
+ *
+ * Si `RESEND_API_KEY` no está definida, el mailer arranca en modo *no-op*
+ * (loguea el envío en lugar de mandar email). Permite levantar el servicio
+ * en entornos donde Resend aún no esté provisionado (preview deploys,
+ * primer despliegue MVP). En producción real la variable debe estar.
  */
 export class ResendInvitationMailer implements identity.InvitationMailer {
-  private readonly resend: Resend;
+  private readonly logger = new Logger(ResendInvitationMailer.name);
+  private readonly resend: Resend | null;
   private readonly from: string;
 
   constructor() {
     const apiKey = process.env.RESEND_API_KEY;
-    if (!apiKey) throw new Error('RESEND_API_KEY no definida');
-    this.resend = new Resend(apiKey);
+    if (!apiKey) {
+      this.logger.warn(
+        'RESEND_API_KEY no definida — el mailer arranca en modo no-op (no se envían emails).',
+      );
+      this.resend = null;
+    } else {
+      this.resend = new Resend(apiKey);
+    }
     this.from = process.env.SMTP_FROM ?? 'no-reply@castellar.app';
   }
 
@@ -25,6 +38,12 @@ export class ResendInvitationMailer implements identity.InvitationMailer {
     role: identity.Role;
     acceptUrl: string;
   }): Promise<void> {
+    if (!this.resend) {
+      this.logger.warn(
+        `[no-op mailer] would send invitation to ${args.email} for tenant ${args.tenantName}`,
+      );
+      return;
+    }
     const subject = `Te han invitado a ${args.tenantName} en Castellar`;
     const html = `
       <div style="font-family: system-ui, sans-serif; max-width: 540px;">
