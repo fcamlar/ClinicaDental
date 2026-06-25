@@ -1,5 +1,8 @@
 'use client';
 
+export const runtime = 'edge';
+
+
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
@@ -83,7 +86,7 @@ export default function MfaEnrollPage() {
               <Input
                 id="code"
                 inputMode="numeric"
-                pattern="\\d{6}"
+                pattern="\d{6}"
                 maxLength={6}
                 value={code}
                 onChange={(e) => setCode(e.target.value)}

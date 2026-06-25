@@ -1,13 +1,10 @@
-import Link from 'next/link';
-
 /**
  * Página 404 explícita.
  *
- * Necesaria con `@cloudflare/next-on-pages`: la página 404 automática de
- * Next.js no hereda el `runtime = 'edge'` del layout raíz porque vive
- * fuera del árbol normal de rutas. Sin esta export explícita, el build
- * falla con "the following routes were not configured to run with the
- * Edge Runtime: /_not-found".
+ * Mínima a propósito: sin imports (ni siquiera de next/link), sin lógica
+ * runtime. Cualquier código adicional puede arrastrar dependencias que
+ * next-on-pages clasifica como nodejs y rechaza el build con
+ * "route was not configured to run with the Edge Runtime".
  */
 export const runtime = 'edge';
 
@@ -28,7 +25,7 @@ export default function NotFound() {
         <p style={{ color: '#6b7280', margin: '0.5rem 0 1.5rem' }}>
           No hemos encontrado la página que buscas.
         </p>
-        <Link
+        <a
           href="/"
           style={{
             display: 'inline-block',
@@ -41,7 +38,7 @@ export default function NotFound() {
           }}
         >
           Volver al inicio
-        </Link>
+        </a>
       </div>
     </div>
   );

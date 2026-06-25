@@ -1,3 +1,4 @@
+export const runtime = 'edge';
 import { Sidebar } from '@/components/sidebar';
 import { requireAuthOrRedirect } from '@/lib/server-auth';
 

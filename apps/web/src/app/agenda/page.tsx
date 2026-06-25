@@ -1,5 +1,8 @@
 'use client';
 
+export const runtime = 'edge';
+
+
 import { useMemo, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { ChevronLeft, ChevronRight, Plus } from 'lucide-react';

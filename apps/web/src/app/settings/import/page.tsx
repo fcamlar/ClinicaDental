@@ -1,5 +1,8 @@
 'use client';
 
+export const runtime = 'edge';
+
+
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -33,7 +36,8 @@ export default function ImportPage() {
   });
 
   function parse(): Array<Record<string, string>> {
-    const lines = csv.trim().split('\n').filter(Boolean);
+    const lines = csv.trim().split('
+').filter(Boolean);
     if (lines.length === 0) return [];
     const headers = lines[0]!.split(',').map((h) => h.trim());
     const out: Array<Record<string, string>> = [];
