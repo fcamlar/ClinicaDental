@@ -22,7 +22,9 @@ services:
     rootDir: .
     # corepack@latest mitiga el bug de claves caducadas en Node ≤22.12
     # (https://github.com/nodejs/corepack/issues/612).
-    buildCommand: npm install -g corepack@latest && corepack enable && pnpm install --frozen-lockfile && pnpm --filter @castellar/db generate && pnpm --filter @castellar/api build
+    # NODE_ENV=development durante el build para que pnpm instale devDependencies
+    # (prisma, @nestjs/cli, typescript). En runtime el envVar fuerza production.
+    buildCommand: npm install -g corepack@latest && corepack enable && NODE_ENV=development pnpm install --frozen-lockfile && pnpm --filter @castellar/db generate && pnpm --filter @castellar/api build
     startCommand: pnpm --filter @castellar/api start
     healthCheckPath: /health
     envVars:
