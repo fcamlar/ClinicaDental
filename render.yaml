@@ -1,14 +1,16 @@
 # Castellar — render.yaml
 #
-# Define los servicios alojados en Render (free tier).
+# Define los servicios alojados en Render.
 # Render lee este archivo en la raíz del repo y crea/actualiza los servicios.
 #
 # Limitaciones del free tier que aceptamos en MVP:
 #   - El servicio web duerme tras 15 min sin tráfico (cold start ~30 s).
 #   - 750 horas/mes por cuenta entre todos los servicios free.
 #   - No hay almacenamiento persistente; la BD está en Supabase, no en Render.
+#   - Los background workers NO están disponibles en free tier (requieren Starter $7/mes).
+#     El worker está comentado abajo; descoméntalo cuando subas el plan.
 #
-# Antes del piloto en clínica real, pasaremos `api` y `worker` a Starter ($7/mes c/u).
+# Antes del piloto en clínica real, pasaremos `api` a Starter y activaremos `worker`.
 
 services:
   - type: web
@@ -18,7 +20,9 @@ services:
     plan: free
     branch: main
     rootDir: .
-    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm --filter @castellar/db generate && pnpm --filter @castellar/api build
+    # corepack@latest mitiga el bug de claves caducadas en Node ≤22.12
+    # (https://github.com/nodejs/corepack/issues/612).
+    buildCommand: npm install -g corepack@latest && corepack enable && pnpm install --frozen-lockfile && pnpm --filter @castellar/db generate && pnpm --filter @castellar/api build
     startCommand: pnpm --filter @castellar/api start
     healthCheckPath: /health
     envVars:
@@ -28,20 +32,21 @@ services:
         value: '10000'
       # Las siguientes se configuran como secretos en Render Dashboard:
       # DATABASE_URL, DATABASE_MIGRATE_URL, REDIS_URL,
-      # SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_JWT_SECRET,
+      # SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY, SUPABASE_JWT_SECRET,
       # S3_*, RESEND_API_KEY, SENTRY_DSN, APP_URL
       - key: APP_URL
         sync: false
 
-  - type: worker
-    name: castellar-worker
-    runtime: node
-    region: frankfurt
-    plan: free
-    branch: main
-    rootDir: .
-    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm --filter @castellar/worker build
-    startCommand: pnpm --filter @castellar/worker start
-    envVars:
-      - key: NODE_ENV
-        value: production
+  # Worker BullMQ — activar cuando pasemos a plan Starter:
+  # - type: worker
+  #   name: castellar-worker
+  #   runtime: node
+  #   region: frankfurt
+  #   plan: starter
+  #   branch: main
+  #   rootDir: .
+  #   buildCommand: npm install -g corepack@latest && corepack enable && pnpm install --frozen-lockfile && pnpm --filter @castellar/worker build
+  #   startCommand: pnpm --filter @castellar/worker start
+  #   envVars:
+  #     - key: NODE_ENV
+  #       value: production
