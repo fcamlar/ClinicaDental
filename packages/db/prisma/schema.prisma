@@ -145,6 +145,7 @@ model Professional {
   appointments  Appointment[]
   workingHours  WorkingHours[]
   exceptions    AvailabilityException[]
+  visits        Visit[]
 
   @@index([tenantId])
   @@map("professionals")
@@ -183,12 +184,14 @@ model Patient {
   createdAt       DateTime  @default(now()) @map("created_at")
   updatedAt       DateTime  @updatedAt @map("updated_at")
 
-  appointments Appointment[]
-  consents     Consent[]
-  alerts       MedicalAlert[]
-  files        File[]
-  budgets      Budget[]
-  invoices     Invoice[]
+  appointments    Appointment[]
+  consents        Consent[]
+  alerts          MedicalAlert[]
+  // Files se referencian polimórficamente por (ownerType=PATIENT, ownerId=this.id).
+  // Prisma no modela relaciones polimórficas, así que no hay campo `files` aquí.
+  budgets         Budget[]
+  invoices        Invoice[]
+  clinicalRecord  ClinicalRecord?
 
   @@unique([tenantId, code])
   @@index([tenantId])
