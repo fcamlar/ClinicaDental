@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { Conflict, Forbidden, NotFound } from '../shared/errors.js';
-import type { identity } from '../identity/index.js';
+import type * as identity from '../identity/index.js';
 import type { TreatmentRepository } from './ports.js';
 import type { TaxRegime } from './entities.js';
 

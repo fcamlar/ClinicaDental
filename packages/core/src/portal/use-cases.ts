@@ -3,10 +3,10 @@ import { z } from 'zod';
 import { BadRequest, Forbidden, NotFound, PreconditionFailed } from '../shared/errors.js';
 import type { Clock } from '../shared/clock.js';
 import type { TokenGenerator } from '../shared/token.js';
-import type { identity } from '../identity/index.js';
-import type { patients } from '../patients/index.js';
-import type { scheduling } from '../scheduling/index.js';
-import type { billing } from '../billing/index.js';
+import type * as identity from '../identity/index.js';
+import type * as patients from '../patients/index.js';
+import type * as scheduling from '../scheduling/index.js';
+import type * as billing from '../billing/index.js';
 import type { PortalMailer, PortalTokenRepository } from './ports.js';
 import type { PortalSession } from './entities.js';
 

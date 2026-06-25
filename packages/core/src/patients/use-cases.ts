@@ -6,7 +6,7 @@ import {
   classifyNationalId,
   normalizeNationalId,
 } from '../shared/national-id.js';
-import type { identity } from '../identity/index.js';
+import type * as identity from '../identity/index.js';
 import type {
   ConsentRepository,
   FileRepository,

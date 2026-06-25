@@ -14,7 +14,7 @@ import {
   PreconditionFailed,
 } from '../shared/errors.js';
 import type { Clock } from '../shared/clock.js';
-import type { identity } from '../identity/index.js';
+import type * as identity from '../identity/index.js';
 import type {
   Budget,
   BudgetLine,
