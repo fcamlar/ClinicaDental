@@ -144,7 +144,7 @@ export async function seedBilling(args: {
     const total = subtotal + taxTotal;
     const status = statuses[i]!;
     const issuedAt = new Date(Date.now() - (statuses.length - i) * 86_400_000);
-    const acceptedAt = status === 'ACCEPTED' || status === 'CONVERTED' ? issuedAt : null;
+    const acceptedAt = (status as string) === 'ACCEPTED' || (status as string) === 'CONVERTED' ? issuedAt : null;
 
     await prisma.budget.create({
       data: {

@@ -4,7 +4,7 @@
  * notas + un odontograma con hallazgos variados.
  */
 
-import type { PrismaClient } from '@prisma/client';
+import type { Prisma, PrismaClient } from '@prisma/client';
 
 const NOTE_BODIES = [
   'Paciente acude para revisión. Higiene aceptable, sin caries visibles. Recomendado mantenimiento en 6 meses.',
@@ -103,7 +103,7 @@ export async function seedClinical(args: {
         data: {
           tenantId,
           visitId: visit.id,
-          stateJson: state,
+          stateJson: state as Prisma.InputJsonValue,
         },
       });
     }

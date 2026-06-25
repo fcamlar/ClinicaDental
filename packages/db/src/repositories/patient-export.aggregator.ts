@@ -14,6 +14,7 @@ export class PrismaPatientExportAggregator implements patients.PatientExportAggr
 
   async fetch({ patientId }: { patientId: string }) {
     const [
+      patient,
       consents,
       alerts,
       files,
@@ -26,6 +27,7 @@ export class PrismaPatientExportAggregator implements patients.PatientExportAggr
       payments,
       appointments,
     ] = await Promise.all([
+      this.tx.patient.findUniqueOrThrow({ where: { id: patientId } }),
       this.tx.consent.findMany({ where: { patientId }, orderBy: { signedAt: 'desc' } }),
       this.tx.medicalAlert.findMany({ where: { patientId }, orderBy: { createdAt: 'desc' } }),
       this.tx.file.findMany({
@@ -63,6 +65,7 @@ export class PrismaPatientExportAggregator implements patients.PatientExportAggr
     ]);
 
     return {
+      patient,
       consents,
       alerts,
       files,
