@@ -1,0 +1,23 @@
+# Castellar — Cloudflare Pages config (apps/web)
+#
+# Cloudflare Pages despliega Next.js mediante el adapter de @cloudflare/next-on-pages.
+# Configurar en el Dashboard de Cloudflare Pages:
+#   - Producción: rama main, build command "pnpm --filter @castellar/web build:cf",
+#     output ".vercel/output/static"
+#   - Variables de entorno (sin commitear):
+#       NEXT_PUBLIC_SUPABASE_URL
+#       NEXT_PUBLIC_SUPABASE_ANON_KEY
+#       NEXT_PUBLIC_API_URL  (URL de Render: https://castellar-api.onrender.com)
+#       NEXT_PUBLIC_APP_URL
+
+name = "castellar-web"
+compatibility_date = "2026-06-25"
+compatibility_flags = ["nodejs_compat"]
+pages_build_output_dir = ".vercel/output/static"
+
+[vars]
+# No poner secretos aquí. Solo variables públicas si fuera necesario.
+
+[[routes]]
+pattern = "/api/*"
+zone_name = "castellar.app"

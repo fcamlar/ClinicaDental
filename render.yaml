@@ -1,0 +1,47 @@
+# Castellar — render.yaml
+#
+# Define los servicios alojados en Render (free tier).
+# Render lee este archivo en la raíz del repo y crea/actualiza los servicios.
+#
+# Limitaciones del free tier que aceptamos en MVP:
+#   - El servicio web duerme tras 15 min sin tráfico (cold start ~30 s).
+#   - 750 horas/mes por cuenta entre todos los servicios free.
+#   - No hay almacenamiento persistente; la BD está en Supabase, no en Render.
+#
+# Antes del piloto en clínica real, pasaremos `api` y `worker` a Starter ($7/mes c/u).
+
+services:
+  - type: web
+    name: castellar-api
+    runtime: node
+    region: frankfurt
+    plan: free
+    branch: main
+    rootDir: .
+    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm --filter @castellar/db generate && pnpm --filter @castellar/api build
+    startCommand: pnpm --filter @castellar/api start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: '10000'
+      # Las siguientes se configuran como secretos en Render Dashboard:
+      # DATABASE_URL, DATABASE_MIGRATE_URL, REDIS_URL,
+      # SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_JWT_SECRET,
+      # S3_*, RESEND_API_KEY, SENTRY_DSN, APP_URL
+      - key: APP_URL
+        sync: false
+
+  - type: worker
+    name: castellar-worker
+    runtime: node
+    region: frankfurt
+    plan: free
+    branch: main
+    rootDir: .
+    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm --filter @castellar/worker build
+    startCommand: pnpm --filter @castellar/worker start
+    envVars:
+      - key: NODE_ENV
+        value: production

@@ -1,0 +1,806 @@
+// Castellar — schema Prisma del MVP (Sprint 0 + Sprint 1)
+//
+// Multi-tenant con Row Level Security en Postgres.
+// El cliente Prisma se conecta con el rol castellar_app (no superuser);
+// las migraciones se aplican con DATABASE_MIGRATE_URL (superuser).
+//
+// Las políticas RLS se definen en migraciones SQL crudas — Prisma no las gestiona.
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  directUrl  = env("DATABASE_MIGRATE_URL")
+  extensions = [uuidOssp(map: "uuid-ossp"), pgcrypto, pgTrgm(map: "pg_trgm"), btreeGist(map: "btree_gist")]
+}
+
+/// Cliente del SaaS (clínica o grupo de clínicas).
+model Tenant {
+  id        String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  name      String
+  country   String   @default("ES") @db.Char(2)
+  locale    String   @default("es-ES")
+  plan      String   @default("free")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  clinics Clinic[]
+  users   User[]
+
+  @@map("tenants")
+}
+
+/// Sede física dentro de un tenant.
+model Clinic {
+  id        String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  tenantId  String   @map("tenant_id") @db.Uuid
+  name      String
+  address   String?
+  vatId     String?  @map("vat_id")
+  timezone  String   @default("Europe/Madrid")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant  Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  members ClinicMember[]
+
+  @@index([tenantId])
+  @@map("clinics")
+}
+
+/// Usuario interno (administrativo o clínico). La autenticación vive en Supabase Auth;
+/// este registro mantiene el rol, estado y vínculo con tenant/clínica.
+model User {
+  id              String     @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  tenantId        String     @map("tenant_id") @db.Uuid
+  supabaseUserId  String     @unique @map("supabase_user_id") @db.Uuid
+  email           String
+  role            Role       @default(RECEPTION)
+  status          UserStatus @default(ACTIVE)
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+
+  tenant  Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  members ClinicMember[]
+
+  @@unique([tenantId, email])
+  @@index([tenantId])
+  @@map("users")
+}
+
+/// Estado de enrolamiento MFA para un usuario, derivado de Supabase Auth.
+/// MFA es obligatorio para roles clínicos: si `mfaRequired` y no
+/// `mfaEnrolledAt`, la API rechaza con FORBIDDEN_MFA_REQUIRED.
+model UserSecurity {
+  userId         String    @id @map("user_id") @db.Uuid
+  mfaRequired    Boolean   @default(false) @map("mfa_required")
+  mfaEnrolledAt  DateTime? @map("mfa_enrolled_at")
+  lastLoginAt    DateTime? @map("last_login_at")
+  lastLoginIp    String?   @map("last_login_ip")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  @@map("user_security")
+}
+
+model ClinicMember {
+  userId    String   @map("user_id") @db.Uuid
+  clinicId  String   @map("clinic_id") @db.Uuid
+  role      Role
+  createdAt DateTime @default(now())
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  clinic Clinic @relation(fields: [clinicId], references: [id], onDelete: Cascade)
+
+  @@id([userId, clinicId])
+  @@map("clinic_members")
+}
+
+enum Role {
+  OWNER
+  ADMIN_CLINIC
+  DENTIST
+  HYGIENIST
+  RECEPTION
+  ACCOUNTING
+
+  @@map("role")
+}
+
+enum UserStatus {
+  ACTIVE
+  INVITED
+  SUSPENDED
+
+  @@map("user_status")
+}
+
+/// Sala / gabinete físico dentro de una sede.
+model Room {
+  id        String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  tenantId  String   @map("tenant_id") @db.Uuid
+  clinicId  String   @map("clinic_id") @db.Uuid
+  name      String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  appointments Appointment[]
+
+  @@index([tenantId])
+  @@map("rooms")
+}
+
+model Professional {
+  id            String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  tenantId      String   @map("tenant_id") @db.Uuid
+  userId        String   @unique @map("user_id") @db.Uuid
+  licenseNumber String?  @map("license_number")
+  specialty     String?
+  color         String   @default("#0ea5e9")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  appointments  Appointment[]
+  workingHours  WorkingHours[]
+  exceptions    AvailabilityException[]
+
+  @@index([tenantId])
+  @@map("professionals")
+}
+
+model Patient {
+  id              String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  tenantId        String    @map("tenant_id") @db.Uuid
+  clinicId        String    @map("clinic_id") @db.Uuid
+  code            String
+  firstName       String    @map("first_name")
+  lastName        String    @map("last_name")
+  /// DNI/NIE/NIF/passport. Almacenado en claro para mostrar en UI; la columna
+  /// es propiedad de la clínica responsable. Búsqueda exacta vía nationalIdHash.
+  nationalId      String?   @map("national_id")
+  /// SHA-256 del nationalId normalizado (mayúsculas, sin espacios). Indexado.
+  nationalIdHash  String?   @map("national_id_hash")
+  birthDate       DateTime? @map("birth_date") @db.Date
+  sex             PatientSex?
+  email           String?
+  phone           String?
+  /// Direcciones — guardamos texto libre en MVP.
+  addressLine1    String?   @map("address_line1")
+  addressLine2    String?   @map("address_line2")
+  postalCode      String?   @map("postal_code")
+  city            String?
+  country         String    @default("ES") @db.Char(2)
+  /// Notas administrativas no clínicas (compañía aseguradora, observaciones).
+  adminNotes      String?   @map("admin_notes")
+  /// Consentimiento RGPD para tratamiento de datos. Versionado en `Consent`.
+  gdprConsentAt   DateTime? @map("gdpr_consent_at")
+  /// Consentimiento explícito para marketing.
+  marketingConsent Boolean  @default(false) @map("marketing_consent")
+  /// Soft-delete. La purga física se ejecuta tras la retención legal (5 años Ley 41/2002).
+  deletedAt       DateTime? @map("deleted_at")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  appointments Appointment[]
+  consents     Consent[]
+  alerts       MedicalAlert[]
+  files        File[]
+  budgets      Budget[]
+  invoices     Invoice[]
+
+  @@unique([tenantId, code])
+  @@index([tenantId])
+  @@index([tenantId, nationalIdHash])
+  @@map("patients")
+}
+
+enum PatientSex {
+  MALE
+  FEMALE
+  OTHER
+  UNDISCLOSED
+
+  @@map("patient_sex")
+}
+
+/// Consentimientos firmados por el paciente. Versionados con texto + hash.
+model Consent {
+  id           String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  tenantId     String   @map("tenant_id") @db.Uuid
+  patientId    String   @map("patient_id") @db.Uuid
+  type         ConsentType
+  /// Texto íntegro del consentimiento en el momento de firma. Inmutable.
+  text         String
+  /// SHA-256 del `text` para detección de tampering.
+  textHash     String   @map("text_hash")
+  signedAt     DateTime @map("signed_at")
+  /// IP del firmante (para evidencia legal).
+  ip           String?
+  /// Si la firma se hizo presencial en clínica, quién la registró.
+  recordedById String?  @map("recorded_by_id") @db.Uuid
+  /// Documento firmado (PDF) en S3, si aplica.
+  documentFileId String? @map("document_file_id") @db.Uuid
+  revokedAt    DateTime? @map("revoked_at")
+
+  patient      Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  documentFile File?   @relation(fields: [documentFileId], references: [id])
+
+  @@index([tenantId, patientId])
+  @@index([tenantId, type])
+  @@map("consents")
+}
+
+enum ConsentType {
+  /// RGPD genérico (tratamiento de datos personales).
+  GDPR
+  /// Consentimiento informado para tratamiento dental.
+  TREATMENT
+  /// Específicos por procedimiento.
+  SURGERY
+  ORTHODONTICS
+  IMPLANT
+  ENDODONTICS
+  MARKETING
+  IMAGE_RIGHTS
+
+  @@map("consent_type")
+}
+
+/// Alertas clínicas visibles para todo el personal con acceso al paciente.
+model MedicalAlert {
+  id        String        @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  tenantId  String        @map("tenant_id") @db.Uuid
+  patientId String        @map("patient_id") @db.Uuid
+  severity  AlertSeverity
+  category  AlertCategory
+  label     String
+  details   String?
+  createdById String?     @map("created_by_id") @db.Uuid
+  createdAt DateTime      @default(now()) @map("created_at")
+  resolvedAt DateTime?    @map("resolved_at")
+
+  patient Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, patientId])
+  @@map("medical_alerts")
+}
+
+enum AlertSeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+
+  @@map("alert_severity")
+}
+
+enum AlertCategory {
+  ALLERGY
+  MEDICATION
+  CONDITION
+  PROCEDURE_RISK
+  OTHER
+
+  @@map("alert_category")
+}
+
+/// Archivo subido (documento, imagen clínica, consentimiento firmado).
+model File {
+  id           String     @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  tenantId     String     @map("tenant_id") @db.Uuid
+  ownerType    FileOwnerType @map("owner_type")
+  ownerId      String     @map("owner_id") @db.Uuid
+  s3Key        String     @unique @map("s3_key")
+  mime         String
+  size         Int
+  filename     String
+  uploadedById String?    @map("uploaded_by_id") @db.Uuid
+  scanStatus   ScanStatus @default(PENDING) @map("scan_status")
+  scanResult   String?    @map("scan_result")
+  uploadedAt   DateTime   @default(now()) @map("uploaded_at")
+  deletedAt    DateTime?  @map("deleted_at")
+
+  consents Consent[]
+
+  @@index([tenantId, ownerType, ownerId])
+  @@map("files")
+}
+
+enum FileOwnerType {
+  PATIENT
+  CONSENT
+  BUDGET
+  INVOICE
+
+  @@map("file_owner_type")
+}
+
+enum ScanStatus {
+  PENDING
+  CLEAN
+  INFECTED
+  ERROR
+
+  @@map("scan_status")
+}
+
+/// Catálogo de tratamientos/servicios. El régimen fiscal por defecto puede
+/// sobrescribirse en cada línea de presupuesto/factura.
+model Treatment {
+  id            String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  tenantId      String    @map("tenant_id") @db.Uuid
+  code          String
+  name          String
+  description   String?
+  /// Precio en céntimos.
+  defaultPrice  Int       @map("default_price")
+  taxRegime     TaxRegime @default(EXEMPT_HEALTHCARE) @map("tax_regime")
+  category      String?
+  /// Activo en el catálogo (los inactivos siguen disponibles para facturas
+  /// históricas pero no aparecen en nuevos presupuestos).
+  active        Boolean   @default(true)
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  budgetLines  BudgetLine[]
+  invoiceLines InvoiceLine[]
+
+  @@unique([tenantId, code])
+  @@index([tenantId])
+  @@index([tenantId, active])
+  @@map("treatments")
+}
+
+enum TaxRegime {
+  EXEMPT_HEALTHCARE
+  STANDARD_AESTHETIC
+  STANDARD_PRODUCT
+  REDUCED
+  NOT_SUBJECT
+
+  @@map("tax_regime")
+}
+
+/// Historia clínica del paciente — singleton por paciente.
+model ClinicalRecord {
+  id        String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  tenantId  String   @map("tenant_id") @db.Uuid
+  patientId String   @unique @map("patient_id") @db.Uuid
+  openedAt  DateTime @default(now()) @map("opened_at")
+
+  patient Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  visits  Visit[]
+  notes   ClinicalNote[]
+
+  @@index([tenantId])
+  @@map("clinical_records")
+}
+
+/// Visita clínica. Agrupa nota(s), odontograma snapshot y adjuntos.
+model Visit {
+  id          String      @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  tenantId    String      @map("tenant_id") @db.Uuid
+  recordId    String      @map("record_id") @db.Uuid
+  patientId   String      @map("patient_id") @db.Uuid
+  professionalId String?  @map("professional_id") @db.Uuid
+  appointmentId  String?  @unique @map("appointment_id") @db.Uuid
+  startedAt   DateTime    @map("started_at")
+  closedAt    DateTime?   @map("closed_at")
+  /// Motivo libre de la visita.
+  motive      String?
+  status      VisitStatus @default(OPEN)
+  createdAt   DateTime    @default(now()) @map("created_at")
+  updatedAt   DateTime    @updatedAt @map("updated_at")
+
+  record         ClinicalRecord @relation(fields: [recordId], references: [id], onDelete: Cascade)
+  notes          ClinicalNote[]
+  odontogram     Odontogram?
+  professional   Professional?  @relation(fields: [professionalId], references: [id])
+
+  @@index([tenantId, patientId])
+  @@index([recordId, startedAt])
+  @@map("visits")
+}
+
+enum VisitStatus {
+  OPEN
+  CLOSED
+
+  @@map("visit_status")
+}
+
+/// Nota clínica. Editable hasta 24h tras `createdAt`; después solo se aceptan adendas.
+/// `lockedAt` es nullable hasta que se bloquea automáticamente (cron o trigger);
+/// las adendas se modelan como notas hijas vía `parentNoteId`.
+model ClinicalNote {
+  id           String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  tenantId     String   @map("tenant_id") @db.Uuid
+  recordId     String   @map("record_id") @db.Uuid
+  visitId      String?  @map("visit_id") @db.Uuid
+  authorId     String   @map("author_id") @db.Uuid
+  type         NoteType @default(EVOLUTION)
+  body         String
+  /// Nota original (NULL) o adenda a otra nota (no NULL).
+  parentNoteId String?  @map("parent_note_id") @db.Uuid
+  /// A partir de este timestamp, la nota es inmutable y solo se aceptan adendas.
+  lockedAt     DateTime? @map("locked_at")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  record  ClinicalRecord @relation(fields: [recordId], references: [id], onDelete: Cascade)
+  visit   Visit?         @relation(fields: [visitId], references: [id], onDelete: SetNull)
+  parent  ClinicalNote?  @relation("note_addendums", fields: [parentNoteId], references: [id])
+  addendums ClinicalNote[] @relation("note_addendums")
+
+  @@index([tenantId, recordId, createdAt])
+  @@index([visitId])
+  @@map("clinical_notes")
+}
+
+enum NoteType {
+  EVOLUTION
+  DIAGNOSIS
+  TREATMENT_PLAN
+  PRESCRIPTION
+  REFERRAL
+  OTHER
+
+  @@map("note_type")
+}
+
+/// Snapshot del odontograma asociado a una visita.
+/// El JSON sigue la forma definida en @castellar/ui (OdontogramState).
+/// Una vez la visita es CLOSED, el snapshot es inmutable (regla en dominio).
+model Odontogram {
+  id         String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  tenantId   String   @map("tenant_id") @db.Uuid
+  visitId    String   @unique @map("visit_id") @db.Uuid
+  stateJson  Json     @map("state_json")
+  snapshotAt DateTime @default(now()) @map("snapshot_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  visit Visit @relation(fields: [visitId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@map("odontograms")
+}
+
+// ============================================================================
+// Sprint 5 — Billing
+// ============================================================================
+
+enum BudgetStatus {
+  DRAFT
+  SENT
+  ACCEPTED
+  REJECTED
+  EXPIRED
+  CONVERTED
+
+  @@map("budget_status")
+}
+
+/// Presupuesto.
+model Budget {
+  id          String       @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  tenantId    String       @map("tenant_id") @db.Uuid
+  clinicId    String       @map("clinic_id") @db.Uuid
+  patientId   String       @map("patient_id") @db.Uuid
+  code        String
+  status      BudgetStatus @default(DRAFT)
+  issuedAt    DateTime     @default(now()) @map("issued_at")
+  validUntil  DateTime?    @map("valid_until")
+  sentAt      DateTime?    @map("sent_at")
+  acceptedAt  DateTime?    @map("accepted_at")
+  rejectedAt  DateTime?    @map("rejected_at")
+  convertedAt DateTime?    @map("converted_at")
+  /// Si se convirtió, factura resultante.
+  invoiceId   String?      @map("invoice_id") @db.Uuid
+  /// Totales calculados en céntimos.
+  subtotal    Int          @default(0)
+  taxTotal    Int          @default(0) @map("tax_total")
+  total       Int          @default(0)
+  notes       String?
+  createdById String       @map("created_by_id") @db.Uuid
+  createdAt   DateTime     @default(now()) @map("created_at")
+  updatedAt   DateTime     @updatedAt @map("updated_at")
+
+  patient Patient      @relation(fields: [patientId], references: [id], onDelete: Restrict)
+  lines   BudgetLine[]
+  invoice Invoice?     @relation("budget_to_invoice", fields: [invoiceId], references: [id])
+
+  @@unique([tenantId, code])
+  @@index([tenantId, patientId])
+  @@index([tenantId, status])
+  @@map("budgets")
+}
+
+model BudgetLine {
+  id          String  @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  tenantId    String  @map("tenant_id") @db.Uuid
+  budgetId    String  @map("budget_id") @db.Uuid
+  treatmentId String? @map("treatment_id") @db.Uuid
+  description String
+  /// Pieza dental FDI opcional (11..48).
+  toothRef    Int?    @map("tooth_ref") @db.SmallInt
+  quantity    Int     @default(1)
+  /// Precio unitario en céntimos (sin IVA).
+  unitPrice   Int     @map("unit_price")
+  /// 0..1 — descuento aplicado.
+  discount    Float   @default(0)
+  taxRegime   TaxRegime @default(EXEMPT_HEALTHCARE) @map("tax_regime")
+  /// Base imponible neta tras descuento (céntimos, redondeado).
+  netAmount   Int     @map("net_amount")
+  /// IVA calculado (céntimos).
+  taxAmount   Int     @map("tax_amount")
+  totalAmount Int     @map("total_amount")
+  position    Int     @default(0)
+
+  budget    Budget     @relation(fields: [budgetId], references: [id], onDelete: Cascade)
+  treatment Treatment? @relation(fields: [treatmentId], references: [id], onDelete: SetNull)
+
+  @@index([budgetId, position])
+  @@map("budget_lines")
+}
+
+/// Series de facturación con contador atómico.
+/// Castellar mantiene una fila por (tenantId, code) y la actualiza con
+/// SELECT ... FOR UPDATE en la transacción de emisión de factura.
+model InvoiceSeries {
+  id        String @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  tenantId  String @map("tenant_id") @db.Uuid
+  clinicId  String? @map("clinic_id") @db.Uuid
+  /// "2026-A", "2026-EST", etc.
+  code      String
+  /// Último número emitido. Empieza en 0 (la próxima factura será 1).
+  lastNumber Int   @default(0) @map("last_number")
+  active    Boolean @default(true)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  invoices Invoice[]
+
+  @@unique([tenantId, code])
+  @@index([tenantId])
+  @@map("invoice_series")
+}
+
+enum InvoiceStatus {
+  ISSUED
+  PARTIALLY_PAID
+  PAID
+  VOIDED
+
+  @@map("invoice_status")
+}
+
+enum InvoiceKind {
+  STANDARD
+  /// Factura rectificativa que anula una previa.
+  RECTIFICATIVE
+
+  @@map("invoice_kind")
+}
+
+/// Factura inmutable. UPDATE/DELETE revocados a nivel de BD (excepto status).
+model Invoice {
+  id           String        @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  tenantId     String        @map("tenant_id") @db.Uuid
+  clinicId     String        @map("clinic_id") @db.Uuid
+  patientId    String        @map("patient_id") @db.Uuid
+  seriesId     String        @map("series_id") @db.Uuid
+  number       Int
+  kind         InvoiceKind   @default(STANDARD)
+  /// Factura original a la que rectifica (NULL si es STANDARD).
+  rectifiesId  String?       @unique @map("rectifies_id") @db.Uuid
+  issuedAt     DateTime      @map("issued_at")
+  status       InvoiceStatus @default(ISSUED)
+  /// Totales en céntimos.
+  subtotal     Int
+  taxTotal     Int           @map("tax_total")
+  total        Int
+  /// Importe pagado acumulado (céntimos). Se mantiene por SUM(payments).
+  paidTotal    Int           @default(0) @map("paid_total")
+  /// Cadena hash interna — preparado para VERI*FACTU.
+  prevHash     String?       @map("prev_hash")
+  internalHash String        @map("internal_hash")
+  /// Tras integración VERI*FACTU se llenan estos campos.
+  verifactuId       String?  @map("verifactu_id")
+  verifactuStatus   String?  @map("verifactu_status")
+  verifactuQrUrl    String?  @map("verifactu_qr_url")
+  /// Nota visible en la factura (no obligatorio).
+  customerNotes     String?  @map("customer_notes")
+  createdById       String   @map("created_by_id") @db.Uuid
+  createdAt         DateTime @default(now()) @map("created_at")
+
+  patient   Patient        @relation(fields: [patientId], references: [id], onDelete: Restrict)
+  series    InvoiceSeries  @relation(fields: [seriesId], references: [id], onDelete: Restrict)
+  rectifies Invoice?       @relation("invoice_rectifies", fields: [rectifiesId], references: [id])
+  rectifiedBy Invoice?     @relation("invoice_rectifies")
+  lines     InvoiceLine[]
+  payments  Payment[]
+  budget    Budget[]       @relation("budget_to_invoice")
+
+  @@unique([tenantId, seriesId, number])
+  @@index([tenantId, patientId])
+  @@index([tenantId, issuedAt])
+  @@map("invoices")
+}
+
+model InvoiceLine {
+  id          String @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  tenantId    String @map("tenant_id") @db.Uuid
+  invoiceId   String @map("invoice_id") @db.Uuid
+  treatmentId String? @map("treatment_id") @db.Uuid
+  description String
+  toothRef    Int?    @map("tooth_ref") @db.SmallInt
+  quantity    Int     @default(1)
+  unitPrice   Int     @map("unit_price")
+  discount    Float   @default(0)
+  taxRegime   TaxRegime @default(EXEMPT_HEALTHCARE) @map("tax_regime")
+  netAmount   Int     @map("net_amount")
+  taxAmount   Int     @map("tax_amount")
+  totalAmount Int     @map("total_amount")
+  position    Int     @default(0)
+
+  invoice   Invoice    @relation(fields: [invoiceId], references: [id], onDelete: Restrict)
+  treatment Treatment? @relation(fields: [treatmentId], references: [id], onDelete: SetNull)
+
+  @@index([invoiceId, position])
+  @@map("invoice_lines")
+}
+
+enum PaymentMethod {
+  CASH
+  CARD
+  TRANSFER
+  ONLINE
+  OTHER
+
+  @@map("payment_method")
+}
+
+model Payment {
+  id         String        @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  tenantId   String        @map("tenant_id") @db.Uuid
+  invoiceId  String        @map("invoice_id") @db.Uuid
+  method     PaymentMethod
+  /// Importe en céntimos.
+  amount     Int
+  paidAt     DateTime      @map("paid_at")
+  reference  String?
+  recordedById String      @map("recorded_by_id") @db.Uuid
+  /// Marca contable de anulación. Cuando se rectifica una factura, los
+  /// pagos quedan reflejados pero `voidedAt` se establece.
+  voidedAt   DateTime?     @map("voided_at")
+  createdAt  DateTime      @default(now()) @map("created_at")
+
+  invoice Invoice @relation(fields: [invoiceId], references: [id], onDelete: Restrict)
+
+  @@index([tenantId, invoiceId])
+  @@map("payments")
+}
+
+enum AppointmentStatus {
+  SCHEDULED
+  CONFIRMED
+  CHECKED_IN
+  IN_ROOM
+  COMPLETED
+  NO_SHOW
+  CANCELLED
+
+  @@map("appointment_status")
+}
+
+/// Cita en la agenda. Anti-solape garantizado por dos constraints GIST en SQL.
+model Appointment {
+  id             String            @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  tenantId       String            @map("tenant_id") @db.Uuid
+  clinicId       String            @map("clinic_id") @db.Uuid
+  patientId      String            @map("patient_id") @db.Uuid
+  professionalId String            @map("professional_id") @db.Uuid
+  roomId         String?           @map("room_id") @db.Uuid
+  startsAt       DateTime          @map("starts_at")
+  endsAt         DateTime          @map("ends_at")
+  status         AppointmentStatus @default(SCHEDULED)
+  reason         String?
+  notes          String?
+  /// Marca temporal del recordatorio email 24h. NULL = pendiente de enviar.
+  remindedAt     DateTime?         @map("reminded_at")
+  /// Auditoría rápida de estados (check-in, in-room, completed, etc.).
+  checkedInAt    DateTime?         @map("checked_in_at")
+  inRoomAt       DateTime?         @map("in_room_at")
+  completedAt    DateTime?         @map("completed_at")
+  noShowAt       DateTime?         @map("no_show_at")
+  cancelledAt    DateTime?         @map("cancelled_at")
+  cancelReason   String?           @map("cancel_reason")
+  createdAt      DateTime          @default(now()) @map("created_at")
+  updatedAt      DateTime          @updatedAt @map("updated_at")
+
+  patient      Patient      @relation(fields: [patientId], references: [id])
+  professional Professional @relation(fields: [professionalId], references: [id])
+  room         Room?        @relation(fields: [roomId], references: [id])
+
+  @@index([tenantId])
+  @@index([clinicId, startsAt])
+  @@index([professionalId, startsAt])
+  @@index([tenantId, remindedAt, startsAt])
+  @@map("appointments")
+}
+
+/// Horario laboral semanal de un profesional en una sede.
+/// `dayOfWeek` 0..6 (0 = domingo). Pueden existir varios tramos por día.
+model WorkingHours {
+  id              String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  tenantId        String   @map("tenant_id") @db.Uuid
+  professionalId  String   @map("professional_id") @db.Uuid
+  clinicId        String   @map("clinic_id") @db.Uuid
+  dayOfWeek       Int      @map("day_of_week") @db.SmallInt
+  /// Hora "wall clock" en la timezone de la clínica. Formato HH:MM (minutos desde 00:00).
+  startMinute     Int      @map("start_minute") @db.SmallInt
+  endMinute       Int      @map("end_minute") @db.SmallInt
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  professional Professional @relation(fields: [professionalId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, professionalId, dayOfWeek])
+  @@map("working_hours")
+}
+
+/// Bloqueo / excepción puntual de disponibilidad (vacaciones, festivo, formación).
+model AvailabilityException {
+  id              String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  tenantId        String   @map("tenant_id") @db.Uuid
+  professionalId  String   @map("professional_id") @db.Uuid
+  clinicId        String?  @map("clinic_id") @db.Uuid
+  startsAt        DateTime @map("starts_at")
+  endsAt          DateTime @map("ends_at")
+  reason          String?
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  professional Professional @relation(fields: [professionalId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, professionalId, startsAt])
+  @@map("availability_exceptions")
+}
+
+/// Invitación pendiente para que un usuario se una al tenant.
+/// El token se envía por email y se canjea desde /accept-invite.
+model Invitation {
+  id          String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  tenantId    String   @map("tenant_id") @db.Uuid
+  email       String
+  role        Role
+  invitedById String   @map("invited_by_id") @db.Uuid
+  token       String   @unique
+  expiresAt   DateTime @map("expires_at")
+  acceptedAt  DateTime? @map("accepted_at")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@unique([tenantId, email])
+  @@index([tenantId])
+  @@map("invitations")
+}
+
+/// Registro de auditoría. Cada acción significativa (read/write/delete de
+/// recursos sensibles) escribe aquí. La lectura de historia clínica obliga
+/// a indicar `reason` no vacío (Sprint 4).
+model AuditLog {
+  id           String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  tenantId     String   @map("tenant_id") @db.Uuid
+  actorId      String?  @map("actor_id") @db.Uuid
+  action       String
+  resourceType String   @map("resource_type")
+  resourceId   String?  @map("resource_id") @db.Uuid
+  ip           String?
+  userAgent    String?  @map("user_agent")
+  reason       String?
+  diff         Json?
+  at           DateTime @default(now())
+
+  @@index([tenantId, at])
+  @@index([resourceType, resourceId])
+  @@map("audit_log")
+}

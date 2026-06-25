@@ -1,0 +1,37 @@
+{
+  "_note": "Sprint 1: claves pendientes de traducción al portugués de Brasil. Se completa en Sprint 7.",
+  "app": {
+    "name": "Castellar",
+    "tagline": "Software odontológico em nuvem"
+  },
+  "common": {
+    "save": "Salvar",
+    "cancel": "Cancelar",
+    "delete": "Excluir",
+    "edit": "Editar",
+    "create": "Criar",
+    "search": "Pesquisar",
+    "loading": "Carregando…",
+    "error": "Ocorreu um erro",
+    "retry": "Tentar novamente",
+    "back": "Voltar",
+    "next": "Próximo",
+    "yes": "Sim",
+    "no": "Não",
+    "required": "Obrigatório",
+    "optional": "Opcional"
+  },
+  "auth": {
+    "signIn": "Entrar",
+    "signOut": "Sair",
+    "email": "E-mail",
+    "password": "Senha",
+    "forgotPassword": "Esqueceu sua senha?",
+    "signInButton": "Entrar",
+    "signingIn": "Entrando…",
+    "mfaTitle": "Verificação em duas etapas",
+    "mfaPrompt": "Insira o código de 6 dígitos do seu aplicativo autenticador.",
+    "mfaRequired": "Seu papel exige verificação em duas etapas antes de continuar.",
+    "mfaEnroll": "Configurar 2FA agora"
+  }
+}

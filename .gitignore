@@ -1,0 +1,43 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# Node
+node_modules/
+.pnp.*
+.yarn/
+
+# Build outputs
+dist/
+build/
+.next/
+.turbo/
+*.tsbuildinfo
+
+# Env / secrets
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+logs/
+npm-debug.log*
+pnpm-debug.log*
+
+# Test / coverage
+coverage/
+.nyc_output/
+
+# Editors
+.idea/
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+
+# Prisma
+packages/db/prisma/migrations/dev/
+
+# Misc
+.cache/
+*.swp

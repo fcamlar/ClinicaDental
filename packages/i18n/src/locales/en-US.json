@@ -1,0 +1,109 @@
+{
+  "app": {
+    "name": "Castellar",
+    "tagline": "Cloud dental software for modern clinics"
+  },
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "create": "Create",
+    "search": "Search",
+    "loading": "Loading…",
+    "error": "Something went wrong",
+    "retry": "Retry",
+    "back": "Back",
+    "next": "Next",
+    "yes": "Yes",
+    "no": "No",
+    "required": "Required",
+    "optional": "Optional"
+  },
+  "auth": {
+    "signIn": "Sign in",
+    "signOut": "Sign out",
+    "email": "Email",
+    "password": "Password",
+    "forgotPassword": "Forgot your password?",
+    "signInButton": "Sign in",
+    "signingIn": "Signing in…",
+    "mfaTitle": "Two-step verification",
+    "mfaPrompt": "Enter the 6-digit code from your authenticator app.",
+    "mfaRequired": "Your role requires two-step verification before continuing.",
+    "mfaEnroll": "Set up 2FA now"
+  },
+  "onboarding": {
+    "title": "Create your clinic",
+    "description": "Tell us your clinic name to get started.",
+    "clinicName": "Clinic name",
+    "country": "Country",
+    "language": "Clinic language",
+    "submit": "Create and continue",
+    "creating": "Creating clinic…"
+  },
+  "dashboard": {
+    "title": "Home",
+    "welcome": "Good morning, {name}",
+    "todayAppointments": "Today's appointments",
+    "newPatients": "New patients",
+    "pendingPayments": "Pending payments",
+    "monthRevenue": "Month revenue"
+  },
+  "navigation": {
+    "agenda": "Schedule",
+    "patients": "Patients",
+    "treatments": "Treatments",
+    "budgets": "Estimates",
+    "invoices": "Invoices",
+    "reports": "Reports",
+    "settings": "Settings",
+    "users": "Users",
+    "clinics": "Locations",
+    "audit": "Audit log"
+  },
+  "settings": {
+    "users": {
+      "title": "Users",
+      "description": "Invite and manage your clinic's users.",
+      "invite": "Invite user",
+      "inviteEmail": "Invitee's email",
+      "inviteRole": "Role",
+      "sendInvite": "Send invitation",
+      "invitePending": "Invitation pending",
+      "tableEmail": "Email",
+      "tableRole": "Role",
+      "tableStatus": "Status",
+      "tableActions": "Actions",
+      "statusActive": "Active",
+      "statusInvited": "Pending",
+      "statusSuspended": "Suspended"
+    },
+    "clinics": {
+      "title": "Locations",
+      "description": "Manage the physical locations of your clinic.",
+      "createNew": "New location",
+      "name": "Name",
+      "address": "Address",
+      "vatId": "Tax ID",
+      "timezone": "Time zone"
+    }
+  },
+  "roles": {
+    "OWNER": "Owner",
+    "ADMIN_CLINIC": "Admin",
+    "DENTIST": "Dentist",
+    "HYGIENIST": "Hygienist",
+    "RECEPTION": "Reception",
+    "ACCOUNTING": "Accounting"
+  },
+  "errors": {
+    "NOT_FOUND": "Not found",
+    "CONFLICT": "Conflict with existing data",
+    "FORBIDDEN": "You don't have permission",
+    "BAD_REQUEST": "Invalid request",
+    "UNAUTHORIZED": "Invalid session",
+    "PRECONDITION_FAILED": "Missing prerequisite",
+    "MFA_ENROLLMENT_REQUIRED": "Please set up two-step verification to continue"
+  }
+}

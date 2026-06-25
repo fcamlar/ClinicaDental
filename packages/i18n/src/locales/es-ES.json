@@ -1,0 +1,353 @@
+{
+  "app": {
+    "name": "Castellar",
+    "tagline": "Software dental cloud para clínicas modernas"
+  },
+  "common": {
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "create": "Crear",
+    "search": "Buscar",
+    "loading": "Cargando…",
+    "error": "Ha ocurrido un error",
+    "retry": "Reintentar",
+    "back": "Volver",
+    "next": "Siguiente",
+    "yes": "Sí",
+    "no": "No",
+    "required": "Obligatorio",
+    "optional": "Opcional"
+  },
+  "auth": {
+    "signIn": "Iniciar sesión",
+    "signOut": "Cerrar sesión",
+    "email": "Correo electrónico",
+    "password": "Contraseña",
+    "forgotPassword": "¿Has olvidado tu contraseña?",
+    "signInButton": "Acceder",
+    "signingIn": "Accediendo…",
+    "mfaTitle": "Verificación en dos pasos",
+    "mfaPrompt": "Introduce el código de 6 dígitos de tu app autenticadora.",
+    "mfaRequired": "Tu rol requiere activar verificación en dos pasos antes de continuar.",
+    "mfaEnroll": "Configurar 2FA ahora"
+  },
+  "onboarding": {
+    "title": "Crea tu clínica",
+    "description": "Cuéntanos cómo se llama tu clínica para empezar.",
+    "clinicName": "Nombre de la clínica",
+    "country": "País",
+    "language": "Idioma de la clínica",
+    "submit": "Crear y continuar",
+    "creating": "Creando clínica…"
+  },
+  "dashboard": {
+    "title": "Inicio",
+    "welcome": "Buenos días, {name}",
+    "todayAppointments": "Citas de hoy",
+    "newPatients": "Pacientes nuevos",
+    "pendingPayments": "Cobros pendientes",
+    "monthRevenue": "Facturación del mes"
+  },
+  "navigation": {
+    "agenda": "Agenda",
+    "patients": "Pacientes",
+    "treatments": "Tratamientos",
+    "budgets": "Presupuestos",
+    "invoices": "Facturas",
+    "reports": "Informes",
+    "settings": "Configuración",
+    "users": "Usuarios",
+    "clinics": "Sedes",
+    "audit": "Auditoría"
+  },
+  "patients": {
+    "title": "Pacientes",
+    "newPatient": "Nuevo paciente",
+    "search": "Buscar por nombre, apellido o código…",
+    "table": {
+      "code": "Código",
+      "name": "Paciente",
+      "phone": "Teléfono",
+      "email": "Email",
+      "alerts": "Alertas"
+    },
+    "form": {
+      "firstName": "Nombre",
+      "lastName": "Apellidos",
+      "nationalId": "DNI / NIE / NIF",
+      "birthDate": "Fecha de nacimiento",
+      "sex": "Sexo",
+      "email": "Email",
+      "phone": "Teléfono",
+      "address": "Dirección",
+      "postalCode": "Código postal",
+      "city": "Ciudad",
+      "country": "País",
+      "adminNotes": "Notas administrativas",
+      "gdprConsent": "Consentimiento RGPD",
+      "gdprConsentText": "Texto del consentimiento",
+      "marketingConsent": "Acepto comunicaciones comerciales",
+      "create": "Crear paciente",
+      "creating": "Creando…",
+      "save": "Guardar"
+    },
+    "tabs": {
+      "data": "Datos",
+      "alerts": "Alertas médicas",
+      "consents": "Consentimientos",
+      "documents": "Documentos",
+      "appointments": "Citas",
+      "clinical": "Historia clínica",
+      "billing": "Facturación"
+    },
+    "reasonDialog": {
+      "title": "Motivo de acceso a la ficha",
+      "description": "Por cumplimiento de la Ley 41/2002, cada acceso a la historia clínica queda registrado. Indica brevemente el motivo.",
+      "placeholder": "p. ej. Revisión programada",
+      "continue": "Continuar"
+    },
+    "alerts": {
+      "empty": "Sin alertas registradas",
+      "add": "Añadir alerta",
+      "severity": {
+        "LOW": "Baja",
+        "MEDIUM": "Media",
+        "HIGH": "Alta",
+        "CRITICAL": "Crítica"
+      },
+      "category": {
+        "ALLERGY": "Alergia",
+        "MEDICATION": "Medicación",
+        "CONDITION": "Patología",
+        "PROCEDURE_RISK": "Riesgo de procedimiento",
+        "OTHER": "Otro"
+      }
+    },
+    "consents": {
+      "signed": "Firmado",
+      "revoked": "Revocado",
+      "type": {
+        "GDPR": "RGPD",
+        "TREATMENT": "Tratamiento",
+        "SURGERY": "Cirugía",
+        "ORTHODONTICS": "Ortodoncia",
+        "IMPLANT": "Implante",
+        "ENDODONTICS": "Endodoncia",
+        "MARKETING": "Marketing",
+        "IMAGE_RIGHTS": "Derechos de imagen"
+      }
+    }
+  },
+  "catalog": {
+    "title": "Catálogo de tratamientos",
+    "new": "Nuevo tratamiento",
+    "table": {
+      "code": "Código",
+      "name": "Nombre",
+      "price": "Precio",
+      "regime": "Régimen fiscal",
+      "category": "Categoría",
+      "status": "Estado"
+    },
+    "form": {
+      "code": "Código",
+      "name": "Nombre",
+      "description": "Descripción",
+      "price": "Precio (€)",
+      "regime": "Régimen fiscal",
+      "category": "Categoría",
+      "active": "Activo"
+    },
+    "regime": {
+      "EXEMPT_HEALTHCARE": "Sanitario exento",
+      "STANDARD_AESTHETIC": "Estético 21%",
+      "STANDARD_PRODUCT": "Producto 21%",
+      "REDUCED": "Reducido 10%",
+      "NOT_SUBJECT": "No sujeto"
+    }
+  },
+  "agenda": {
+    "title": "Agenda",
+    "today": "Hoy",
+    "prev": "Anterior",
+    "next": "Siguiente",
+    "viewDay": "Día",
+    "viewWeek": "Semana",
+    "byProfessional": "Por profesional",
+    "byRoom": "Por sala",
+    "newAppointment": "Nueva cita",
+    "form": {
+      "patient": "Paciente",
+      "professional": "Profesional",
+      "room": "Sala",
+      "starts": "Inicio",
+      "ends": "Fin",
+      "duration": "Duración (min)",
+      "reason": "Motivo",
+      "notes": "Notas"
+    },
+    "status": {
+      "SCHEDULED": "Programada",
+      "CONFIRMED": "Confirmada",
+      "CHECKED_IN": "En sala de espera",
+      "IN_ROOM": "En gabinete",
+      "COMPLETED": "Atendida",
+      "NO_SHOW": "No presentado",
+      "CANCELLED": "Cancelada"
+    },
+    "actions": {
+      "checkIn": "Llegada",
+      "inRoom": "Pasar a gabinete",
+      "complete": "Terminar",
+      "noShow": "Marcar no presentado",
+      "cancel": "Cancelar"
+    },
+    "empty": "Sin citas en este rango"
+  },
+  "clinical": {
+    "title": "Historia clínica",
+    "openVisit": "Visita en curso",
+    "noOpenVisit": "Sin visita abierta",
+    "startVisit": "Abrir visita",
+    "closeVisit": "Cerrar visita",
+    "visitClosed": "Visita cerrada — solo lectura",
+    "visits": "Visitas",
+    "noVisits": "Sin visitas previas",
+    "openVisitBtn": "Abrir",
+    "notes": "Notas clínicas",
+    "newNote": "Nueva nota",
+    "noteType": {
+      "EVOLUTION": "Evolución",
+      "DIAGNOSIS": "Diagnóstico",
+      "TREATMENT_PLAN": "Plan de tratamiento",
+      "PRESCRIPTION": "Receta",
+      "REFERRAL": "Derivación",
+      "OTHER": "Otro"
+    },
+    "noteBody": "Texto",
+    "save": "Guardar",
+    "edit": "Editar",
+    "saveEdit": "Guardar cambios",
+    "cancel": "Cancelar",
+    "addendum": "Añadir adenda",
+    "addendumPlaceholder": "Texto de la adenda…",
+    "addendumOf": "Adenda de",
+    "lockedAt": "Bloqueada el",
+    "byAuthor": "por",
+    "odontogram": "Odontograma",
+    "odontogramReadOnly": "El odontograma es de solo lectura en visitas cerradas",
+    "reasonRequired": "Indica el motivo de acceso a la historia clínica",
+    "reasonContinue": "Continuar"
+  },
+  "billing": {
+    "budgets": {
+      "title": "Presupuestos",
+      "new": "Nuevo presupuesto",
+      "code": "Código",
+      "patient": "Paciente",
+      "issued": "Emitido",
+      "validUntil": "Válido hasta",
+      "status": "Estado",
+      "total": "Total",
+      "addLine": "Añadir línea",
+      "send": "Enviar",
+      "accept": "Aceptar",
+      "reject": "Rechazar",
+      "convert": "Convertir en factura",
+      "notes": "Notas",
+      "viewPdf": "Ver PDF",
+      "selectTreatment": "Tratamiento",
+      "tooth": "Pieza",
+      "quantity": "Cantidad",
+      "price": "Precio (€)",
+      "discount": "Descuento (%)",
+      "regime": "Régimen"
+    },
+    "budgetStatus": {
+      "DRAFT": "Borrador",
+      "SENT": "Enviado",
+      "ACCEPTED": "Aceptado",
+      "REJECTED": "Rechazado",
+      "EXPIRED": "Expirado",
+      "CONVERTED": "Facturado"
+    },
+    "invoices": {
+      "title": "Facturas",
+      "series": "Serie",
+      "number": "Número",
+      "issued": "Emitida",
+      "patient": "Paciente",
+      "total": "Total",
+      "status": "Estado",
+      "paid": "Pagado",
+      "pending": "Pendiente",
+      "registerPayment": "Registrar cobro",
+      "void": "Anular",
+      "rectifies": "Rectifica",
+      "viewPdf": "Ver PDF",
+      "method": "Método",
+      "amount": "Importe (€)",
+      "paidAt": "Fecha",
+      "reference": "Referencia"
+    },
+    "invoiceStatus": {
+      "ISSUED": "Emitida",
+      "PARTIALLY_PAID": "Parcial",
+      "PAID": "Pagada",
+      "VOIDED": "Anulada"
+    },
+    "method": {
+      "CASH": "Efectivo",
+      "CARD": "Tarjeta",
+      "TRANSFER": "Transferencia",
+      "ONLINE": "Online",
+      "OTHER": "Otro"
+    }
+  },
+  "settings": {
+    "users": {
+      "title": "Usuarios",
+      "description": "Invita y gestiona los usuarios de tu clínica.",
+      "invite": "Invitar usuario",
+      "inviteEmail": "Correo del invitado",
+      "inviteRole": "Rol",
+      "sendInvite": "Enviar invitación",
+      "invitePending": "Invitación pendiente",
+      "tableEmail": "Correo",
+      "tableRole": "Rol",
+      "tableStatus": "Estado",
+      "tableActions": "Acciones",
+      "statusActive": "Activo",
+      "statusInvited": "Pendiente",
+      "statusSuspended": "Suspendido"
+    },
+    "clinics": {
+      "title": "Sedes",
+      "description": "Gestiona las sedes físicas de tu clínica.",
+      "createNew": "Nueva sede",
+      "name": "Nombre",
+      "address": "Dirección",
+      "vatId": "CIF / NIF",
+      "timezone": "Zona horaria"
+    }
+  },
+  "roles": {
+    "OWNER": "Titular",
+    "ADMIN_CLINIC": "Administración",
+    "DENTIST": "Dentista",
+    "HYGIENIST": "Higienista",
+    "RECEPTION": "Recepción",
+    "ACCOUNTING": "Contabilidad"
+  },
+  "errors": {
+    "NOT_FOUND": "No encontrado",
+    "CONFLICT": "Conflicto con un dato existente",
+    "FORBIDDEN": "No tienes permiso",
+    "BAD_REQUEST": "Petición inválida",
+    "UNAUTHORIZED": "Sesión no válida",
+    "PRECONDITION_FAILED": "Falta un requisito previo",
+    "MFA_ENROLLMENT_REQUIRED": "Configura la verificación en dos pasos para continuar"
+  }
+}

@@ -1,0 +1,47 @@
+{
+  "name": "@castellar/api",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "nest build",
+    "start": "node dist/main.js",
+    "dev": "nest start --watch",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@castellar/api-contracts": "workspace:*",
+    "@castellar/core": "workspace:*",
+    "@castellar/db": "workspace:*",
+    "@aws-sdk/client-s3": "^3.722.0",
+    "@aws-sdk/s3-request-presigner": "^3.722.0",
+    "@nestjs/common": "^10.4.15",
+    "@nestjs/core": "^10.4.15",
+    "@nestjs/platform-express": "^10.4.15",
+    "@supabase/supabase-js": "^2.47.10",
+    "@trpc/server": "^11.0.0-rc.660",
+    "bullmq": "^5.34.6",
+    "express": "^4.21.2",
+    "ioredis": "^5.4.2",
+    "jose": "^5.9.6",
+    "reflect-metadata": "^0.2.2",
+    "resend": "^4.0.1",
+    "rxjs": "^7.8.1",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@castellar/config": "workspace:*",
+    "@nestjs/cli": "^10.4.9",
+    "@nestjs/schematics": "^10.2.3",
+    "@nestjs/testing": "^10.4.15",
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.10.5",
+    "@types/supertest": "^6.0.2",
+    "supertest": "^7.0.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "name": "@castellar/i18n",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./locales/es-ES": "./src/locales/es-ES.json",
+    "./locales/en-US": "./src/locales/en-US.json",
+    "./locales/pt-BR": "./src/locales/pt-BR.json"
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@castellar/config": "workspace:*",
+    "typescript": "^5.7.2"
+  }
+}
