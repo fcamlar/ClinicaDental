@@ -1,1 +1,1 @@
-export * from './odontogram/index.js';
+export * from './odontogram';

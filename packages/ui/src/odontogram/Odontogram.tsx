@@ -8,7 +8,7 @@ import {
   type OdontogramState,
   type Surface,
   type ToothFDI,
-} from './model.js';
+} from './model';
 
 /**
  * Odontograma adulto clickable — prototipo Sprint 0.
