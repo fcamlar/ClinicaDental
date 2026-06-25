@@ -22,7 +22,10 @@ services:
     rootDir: .
     # corepack@latest mitiga el bug de claves caducadas en Node ≤22.12
     # (https://github.com/nodejs/corepack/issues/612).
-    buildCommand: npm install -g corepack@latest && corepack enable && pnpm install --frozen-lockfile && pnpm --filter @castellar/db generate && pnpm --filter @castellar/api build
+    # Orden: install → prisma generate → db build (compila a dist/) → api build.
+    # @castellar/db apunta a ./dist/index.js en su package.json; sin el build
+    # intermedio, @castellar/api no puede resolver ese import.
+    buildCommand: npm install -g corepack@latest && corepack enable && pnpm install --frozen-lockfile && pnpm --filter @castellar/db generate && pnpm --filter @castellar/db build && pnpm --filter @castellar/api build
     startCommand: pnpm --filter @castellar/api start
     healthCheckPath: /health
     envVars:

@@ -1,5 +1,5 @@
 import { Injectable, Module, type OnModuleDestroy } from '@nestjs/common';
-import { PrismaClient } from '@prisma/client';
+import { Prisma, PrismaClient } from '@prisma/client';
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { Redis as IORedis } from 'ioredis';
@@ -147,7 +147,7 @@ export class ServicesProvider implements OnModuleDestroy {
         if (!tenantId) {
           throw new Error('inTenant llamado sin tenantId activo');
         }
-        return this.appClient.$transaction(async (tx: PrismaClient) => {
+        return this.appClient.$transaction(async (tx: Prisma.TransactionClient) => {
           await tx.$executeRawUnsafe(
             `SELECT set_config('app.current_tenant_id', $1, true)`,
             tenantId,
