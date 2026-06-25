@@ -1,4 +1,5 @@
 import { getRequestConfig } from 'next-intl/server';
+import type { AbstractIntlMessages } from 'next-intl';
 import { cookies } from 'next/headers';
 import { getMessages, DEFAULT_LOCALE, SUPPORTED_LOCALES, type SupportedLocale } from '@castellar/i18n';
 
@@ -21,6 +22,6 @@ export default getRequestConfig(async () => {
 
   return {
     locale,
-    messages: getMessages(locale) as Record<string, unknown>,
+    messages: getMessages(locale) as AbstractIntlMessages,
   };
 });
