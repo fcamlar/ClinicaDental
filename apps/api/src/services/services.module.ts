@@ -2,7 +2,7 @@ import { Injectable, Module, type OnModuleDestroy } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
-import IORedis from 'ioredis';
+import { Redis as IORedis } from 'ioredis';
 import { Queue } from 'bullmq';
 import { randomUUID, createHash } from 'node:crypto';
 import {
@@ -48,7 +48,7 @@ class PresignedUploadAdapter implements PresignedUploadService {
   private readonly scanQueue = new Queue('castellar:scan-file', {
     connection: new IORedis(process.env.REDIS_URL ?? 'redis://localhost:6379', {
       maxRetriesPerRequest: null,
-    }),
+    }) as never,
   });
 
   async createPresignedUpload(args: {
@@ -147,7 +147,7 @@ export class ServicesProvider implements OnModuleDestroy {
         if (!tenantId) {
           throw new Error('inTenant llamado sin tenantId activo');
         }
-        return this.appClient.$transaction(async (tx) => {
+        return this.appClient.$transaction(async (tx: PrismaClient) => {
           await tx.$executeRawUnsafe(
             `SELECT set_config('app.current_tenant_id', $1, true)`,
             tenantId,

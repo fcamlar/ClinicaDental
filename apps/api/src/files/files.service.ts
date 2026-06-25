@@ -1,7 +1,7 @@
 import { Injectable, Module } from '@nestjs/common';
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
-import IORedis from 'ioredis';
+import { Redis as IORedis } from 'ioredis';
 import { Queue } from 'bullmq';
 import { randomUUID, createHash } from 'node:crypto';
 
@@ -40,7 +40,7 @@ export class FilesService {
   private readonly scanQueue = new Queue('castellar:scan-file', {
     connection: new IORedis(process.env.REDIS_URL ?? 'redis://localhost:6379', {
       maxRetriesPerRequest: null,
-    }),
+    }) as never,
   });
 
   /**

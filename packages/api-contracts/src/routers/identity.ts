@@ -148,7 +148,7 @@ export const identityRouter = router({
     .mutation(async ({ ctx, input }) => {
       return runUseCase(() =>
         ctx.services.inTenant(async (deps) => {
-          const tenant = await deps.tenantRepo.findById(ctx.tenantId);
+          const tenant = await deps.tenantRepo.findById(ctx.tenantId!);
           if (!tenant) {
             throw new TRPCError({ code: 'NOT_FOUND', message: 'Tenant no encontrado' });
           }
@@ -164,10 +164,10 @@ export const identityRouter = router({
             acceptUrlFor: ctx.services.acceptUrlFor,
           });
           const { user, invitation } = await useCase({
-            tenantId: ctx.tenantId,
-            actorId: ctx.user.id,
-            actorEmail: ctx.user.email,
-            actorRole: ctx.user.role,
+            tenantId: ctx.tenantId!,
+            actorId: ctx.user!.id,
+            actorEmail: ctx.user!.email,
+            actorRole: ctx.user!.role,
             tenantName: tenant.name,
             input,
             ip: ctx.ip,
@@ -204,9 +204,9 @@ export const identityRouter = router({
             audit: deps.audit,
           });
           return useCase({
-            tenantId: ctx.tenantId,
-            actorId: ctx.user.id,
-            actorRole: ctx.user.role,
+            tenantId: ctx.tenantId!,
+            actorId: ctx.user!.id,
+            actorRole: ctx.user!.role,
             input,
             ip: ctx.ip,
           });
