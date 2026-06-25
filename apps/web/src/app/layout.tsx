@@ -5,12 +5,6 @@ import { AppProviders } from '@/lib/providers';
 import { TelemetryConsent } from '@/components/telemetry-consent';
 import './globals.css';
 
-/**
- * Runtime edge para que Cloudflare Pages pueda ejecutar las rutas dinámicas
- * vía Workers. Heredan todas las páginas hijas del app router.
- */
-export const runtime = 'edge';
-
 export const metadata: Metadata = {
   title: 'Castellar',
   description: 'SaaS de gestión de clínicas dentales',

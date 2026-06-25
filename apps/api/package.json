@@ -6,7 +6,7 @@
   "scripts": {
     "build": "nest build",
     "start": "node --import tsx dist/main.js",
-    "dev": "nest start --watch",
+    "dev": "tsx watch src/main.ts",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run"

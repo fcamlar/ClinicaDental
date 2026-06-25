@@ -1,8 +1,5 @@
 'use client';
 
-export const runtime = 'edge';
-
-
 import { use, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { AlertTriangle, FileText, Stethoscope, User2 } from 'lucide-react';

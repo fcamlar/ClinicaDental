@@ -1,8 +1,5 @@
 'use client';
 
-export const runtime = 'edge';
-
-
 import { use, useEffect, useMemo, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Plus, Lock, FileText } from 'lucide-react';

@@ -1,13 +1,3 @@
-/**
- * Página 404 explícita.
- *
- * Mínima a propósito: sin imports (ni siquiera de next/link), sin lógica
- * runtime. Cualquier código adicional puede arrastrar dependencias que
- * next-on-pages clasifica como nodejs y rechaza el build con
- * "route was not configured to run with the Edge Runtime".
- */
-export const runtime = 'edge';
-
 export default function NotFound() {
   return (
     <div

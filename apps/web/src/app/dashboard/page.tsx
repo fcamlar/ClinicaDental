@@ -1,8 +1,5 @@
 'use client';
 
-export const runtime = 'edge';
-
-
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';

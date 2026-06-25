@@ -1,8 +1,5 @@
 'use client';
 
-export const runtime = 'edge';
-
-
 import { useState } from 'react';
 import { Odontogram, type OdontogramState } from '@castellar/ui';
 
