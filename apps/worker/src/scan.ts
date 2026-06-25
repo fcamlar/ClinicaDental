@@ -25,7 +25,7 @@ export interface ScanFileJobData {
   tenantId: string;
 }
 
-const SCAN_QUEUE = 'castellar:scan-file';
+const SCAN_QUEUE = 'castellar-scan-file';
 
 function getRedis(): IORedis {
   const url = process.env.REDIS_URL ?? 'redis://localhost:6379';

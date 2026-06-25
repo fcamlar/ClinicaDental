@@ -37,7 +37,7 @@ export class FilesService {
     },
   });
 
-  private readonly scanQueue = new Queue('castellar:scan-file', {
+  private readonly scanQueue = new Queue('castellar-scan-file', {
     connection: new IORedis(process.env.REDIS_URL ?? 'redis://localhost:6379', {
       maxRetriesPerRequest: null,
     }) as never,

@@ -17,7 +17,7 @@ import { PrismaClient } from '@prisma/client';
  * todos los tenants juntos. La columna tenant_id en el email es informativa.
  */
 
-const REMINDERS_QUEUE = 'castellar:reminders';
+const REMINDERS_QUEUE = 'castellar-reminders';
 
 interface ReminderTickJob {
   /** No usado — el job es repetitivo y no lleva data. */
