@@ -53,9 +53,9 @@ export default function InvoiceDetailPage({ params }: { params: Promise<{ id: st
 
   return (
     <div className="space-y-6">
-      <header className="flex items-start justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">
+      <header className="flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h1 className="truncate text-xl font-semibold tracking-tight sm:text-2xl">
             {i.seriesCode}/{String(i.number).padStart(4, '0')}
           </h1>
           <p className="text-sm text-muted-foreground">
@@ -69,24 +69,30 @@ export default function InvoiceDetailPage({ params }: { params: Promise<{ id: st
       </header>
 
       <Card>
-        <CardContent className="p-0">
+        <CardContent className="overflow-x-auto p-0">
           <Table>
             <TableHeader>
               <TableRow>
                 <TableHead>Descripción</TableHead>
-                <TableHead>Pieza</TableHead>
-                <TableHead className="text-right">Cant.</TableHead>
-                <TableHead className="text-right">Precio</TableHead>
+                <TableHead className="hidden sm:table-cell">Pieza</TableHead>
+                <TableHead className="hidden sm:table-cell text-right">Cant.</TableHead>
+                <TableHead className="hidden md:table-cell text-right">Precio</TableHead>
                 <TableHead className="text-right">Total</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {i.lines.map((l) => (
                 <TableRow key={l.id}>
-                  <TableCell>{l.description}</TableCell>
-                  <TableCell>{l.toothRef ?? '—'}</TableCell>
-                  <TableCell className="text-right">{l.quantity}</TableCell>
-                  <TableCell className="text-right tabular-nums">
+                  <TableCell>
+                    <div>{l.description}</div>
+                    <div className="mt-0.5 text-xs text-muted-foreground sm:hidden">
+                      {l.quantity} × {EURO.format(l.unitPrice / 100)}
+                      {l.toothRef ? ` · pieza ${l.toothRef}` : ''}
+                    </div>
+                  </TableCell>
+                  <TableCell className="hidden sm:table-cell">{l.toothRef ?? '—'}</TableCell>
+                  <TableCell className="hidden sm:table-cell text-right">{l.quantity}</TableCell>
+                  <TableCell className="hidden md:table-cell text-right tabular-nums">
                     {EURO.format(l.unitPrice / 100)}
                   </TableCell>
                   <TableCell className="text-right tabular-nums">
@@ -99,7 +105,7 @@ export default function InvoiceDetailPage({ params }: { params: Promise<{ id: st
         </CardContent>
       </Card>
 
-      <div className="flex items-start justify-between gap-6">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:gap-6">
         <Card className="flex-1">
           <CardHeader>
             <CardTitle className="text-base">Pagos</CardTitle>
@@ -131,7 +137,7 @@ export default function InvoiceDetailPage({ params }: { params: Promise<{ id: st
             </ul>
 
             {i.status !== 'PAID' && i.status !== 'VOIDED' && (
-              <div className="grid gap-2 rounded-md border border-dashed border-input p-3 md:grid-cols-4">
+              <div className="grid gap-2 rounded-md border border-dashed border-input p-3 sm:grid-cols-2 md:grid-cols-4">
                 <div className="grid gap-1">
                   <Label className="text-xs">{t('method')}</Label>
                   <select
@@ -166,7 +172,7 @@ export default function InvoiceDetailPage({ params }: { params: Promise<{ id: st
                   />
                 </div>
                 <Button
-                  className="md:col-span-4"
+                  className="sm:col-span-2 md:col-span-4"
                   disabled={amount <= 0 || amount > pending || register.isPending}
                   onClick={() =>
                     register.mutate({
@@ -190,8 +196,8 @@ export default function InvoiceDetailPage({ params }: { params: Promise<{ id: st
           </CardContent>
         </Card>
 
-        <div className="rounded-md border border-border bg-muted/30 p-4 text-sm">
-          <div className="flex w-56 justify-between">
+        <div className="rounded-md border border-border bg-muted/30 p-4 text-sm lg:w-64">
+          <div className="flex justify-between">
             <span>Base</span>
             <span className="tabular-nums">{EURO.format(i.subtotal / 100)}</span>
           </div>

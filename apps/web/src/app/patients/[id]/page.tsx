@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { ExportPatientDataButton } from '@/components/patients/export-data-button';
 import { trpc } from '@/lib/trpc';
 
 /**
@@ -55,9 +56,9 @@ export default function PatientDetailPage({ params }: { params: Promise<{ id: st
 
   return (
     <div className="space-y-6">
-      <header className="flex items-baseline justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">
+      <header className="flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h1 className="truncate text-xl font-semibold tracking-tight sm:text-2xl">
             {patient.firstName} {patient.lastName}
           </h1>
           <p className="text-sm text-muted-foreground">
@@ -65,7 +66,12 @@ export default function PatientDetailPage({ params }: { params: Promise<{ id: st
             {patient.nationalId && ` · ${patient.nationalId}`}
           </p>
         </div>
-        <Badge variant="outline">Motivo: {reason}</Badge>
+        <div className="flex flex-wrap items-center gap-2">
+          <Badge variant="outline" className="max-w-[60vw] truncate sm:max-w-none">
+            Motivo: {reason}
+          </Badge>
+          <ExportPatientDataButton patientId={patient.id} patientCode={patient.code} />
+        </div>
       </header>
 
       <div className="grid gap-6 lg:grid-cols-3">

@@ -74,6 +74,12 @@ export default function AgendaPage() {
     | { open: false }
   >({ open: false });
   const [detailId, setDetailId] = useState<string | null>(null);
+  /**
+   * Filtro de profesional para vista móvil/tablet. En desktop (lg+) mostramos
+   * todos en columnas; por debajo de lg, solo el seleccionado para que la
+   * agenda sea legible sin scroll horizontal forzado.
+   */
+  const [mobileProfId, setMobileProfId] = useState<string | null>(null);
 
   const slots = useMemo(() => {
     const out: number[] = [];
@@ -87,83 +93,106 @@ export default function AgendaPage() {
     return `${String(h).padStart(2, '0')}:${String(mm).padStart(2, '0')}`;
   }
 
+  const allProfs = professionals.data ?? [];
+  const visibleProfsMobile = mobileProfId
+    ? allProfs.filter((p) => p.id === mobileProfId)
+    : allProfs.slice(0, 1);
+
   return (
-    <div className="space-y-4">
-      <header className="flex flex-wrap items-center gap-3">
-        <h1 className="text-2xl font-semibold tracking-tight">{t('title')}</h1>
-        <div className="ml-auto flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={() => setDate(addDays(date, -1))}>
+    <div className="space-y-3 sm:space-y-4">
+      <header className="flex flex-wrap items-center gap-2 sm:gap-3">
+        <h1 className="text-xl font-semibold tracking-tight sm:text-2xl">{t('title')}</h1>
+        <div className="ml-auto flex flex-wrap items-center gap-2">
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => setDate(addDays(date, -1))}
+            aria-label="Día anterior"
+          >
             <ChevronLeft className="h-4 w-4" />
           </Button>
           <Button variant="outline" size="sm" onClick={() => setDate(startOfDayLocal(new Date()))}>
             {t('today')}
           </Button>
-          <span className="min-w-[10ch] text-center font-medium">
+          <span className="min-w-[7ch] text-center text-sm font-medium sm:min-w-[10ch] sm:text-base">
             {date.toLocaleDateString('es-ES', {
-              weekday: 'long',
               day: 'numeric',
-              month: 'long',
+              month: 'short',
             })}
           </span>
-          <Button variant="outline" size="sm" onClick={() => setDate(addDays(date, 1))}>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => setDate(addDays(date, 1))}
+            aria-label="Día siguiente"
+          >
             <ChevronRight className="h-4 w-4" />
           </Button>
+          {clinics.data && clinics.data.length > 1 && (
+            <select
+              value={effectiveClinic ?? ''}
+              onChange={(e) => setClinicId(e.target.value || null)}
+              className="h-9 rounded-md border border-input bg-background px-2 text-sm"
+            >
+              {clinics.data.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+          )}
+        </div>
+      </header>
+
+      {/* Selector de profesional — solo móvil/tablet */}
+      {allProfs.length > 1 && (
+        <div className="flex items-center gap-2 lg:hidden">
+          <span className="text-sm text-muted-foreground">Profesional</span>
           <select
-            value={effectiveClinic ?? ''}
-            onChange={(e) => setClinicId(e.target.value || null)}
-            className="ml-3 h-9 rounded-md border border-input bg-background px-2 text-sm"
+            value={mobileProfId ?? allProfs[0]?.id ?? ''}
+            onChange={(e) => setMobileProfId(e.target.value)}
+            className="h-9 flex-1 rounded-md border border-input bg-background px-2 text-sm"
           >
-            {clinics.data?.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
+            {allProfs.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.specialty ?? p.id.slice(0, 8)}
               </option>
             ))}
           </select>
         </div>
-      </header>
+      )}
 
       <Card>
         <CardContent className="overflow-x-auto p-0">
-          <div
-            className="grid"
-            style={{
-              gridTemplateColumns: `64px repeat(${professionals.data?.length ?? 0}, minmax(180px, 1fr))`,
-            }}
-          >
-            {/* Cabecera */}
-            <div className="border-b border-r border-border" />
-            {professionals.data?.map((p) => (
-              <div
-                key={p.id}
-                className="border-b border-l border-border px-3 py-2 text-sm font-medium"
-              >
-                <span
-                  className="mr-2 inline-block h-2 w-2 rounded-full align-middle"
-                  style={{ background: p.color }}
-                />
-                {p.specialty ? <span className="text-muted-foreground">{p.specialty} · </span> : null}
-                <span className="font-mono text-xs text-muted-foreground">{p.id.slice(0, 6)}</span>
-              </div>
-            ))}
-
-            {/* Filas de slots */}
-            {slots.map((m, rowIndex) => (
-              <Slot
-                key={m}
-                rowIndex={rowIndex}
-                minute={m}
-                slotLabel={fmtSlot(m)}
-                date={date}
-                professionals={professionals.data ?? []}
-                appointments={agenda.data ?? []}
-                onCreate={(profId, startsAt) =>
-                  setCreateDialog({ open: true, professionalId: profId, startsAt })
-                }
-                onOpen={(id) => setDetailId(id)}
-                statusStyle={STATUS_STYLE}
-                statusLabel={tS}
-              />
-            ))}
+          {/* Móvil/tablet: solo el profesional seleccionado. */}
+          <div className="lg:hidden">
+            <AgendaGrid
+              professionals={visibleProfsMobile}
+              slots={slots}
+              fmtSlot={fmtSlot}
+              date={date}
+              appointments={agenda.data ?? []}
+              onCreate={(profId, startsAt) =>
+                setCreateDialog({ open: true, professionalId: profId, startsAt })
+              }
+              onOpen={(id) => setDetailId(id)}
+              statusLabel={tS}
+            />
+          </div>
+          {/* Desktop: todos los profesionales. */}
+          <div className="hidden lg:block">
+            <AgendaGrid
+              professionals={allProfs}
+              slots={slots}
+              fmtSlot={fmtSlot}
+              date={date}
+              appointments={agenda.data ?? []}
+              onCreate={(profId, startsAt) =>
+                setCreateDialog({ open: true, professionalId: profId, startsAt })
+              }
+              onOpen={(id) => setDetailId(id)}
+              statusLabel={tS}
+            />
           </div>
           {(agenda.data ?? []).length === 0 && (
             <p className="px-4 py-6 text-center text-sm text-muted-foreground">{t('empty')}</p>
@@ -172,9 +201,9 @@ export default function AgendaPage() {
       </Card>
 
       <Button
-        className="fixed bottom-6 right-6 gap-2 shadow-lg"
+        className="fixed bottom-4 right-4 z-30 gap-2 shadow-lg sm:bottom-6 sm:right-6"
         onClick={() => {
-          const first = professionals.data?.[0];
+          const first = allProfs[0];
           if (!first) return;
           const at = new Date(date);
           at.setHours(9, 0, 0, 0);
@@ -182,7 +211,7 @@ export default function AgendaPage() {
         }}
       >
         <Plus className="h-4 w-4" />
-        {t('newAppointment')}
+        <span className="hidden sm:inline">{t('newAppointment')}</span>
       </Button>
 
       {createDialog.open && effectiveClinic && (
@@ -211,12 +240,74 @@ export default function AgendaPage() {
   );
 }
 
+interface AgendaGridProps {
+  professionals: Array<{ id: string; color: string; specialty: string | null }>;
+  slots: number[];
+  fmtSlot: (minute: number) => string;
+  date: Date;
+  appointments: SlotProps['appointments'];
+  onCreate: SlotProps['onCreate'];
+  onOpen: SlotProps['onOpen'];
+  statusLabel: SlotProps['statusLabel'];
+}
+
+function AgendaGrid({
+  professionals,
+  slots,
+  fmtSlot,
+  date,
+  appointments,
+  onCreate,
+  onOpen,
+  statusLabel,
+}: AgendaGridProps) {
+  return (
+    <div
+      className="grid"
+      style={{
+        gridTemplateColumns: `56px repeat(${professionals.length}, minmax(140px, 1fr))`,
+      }}
+    >
+      <div className="border-b border-r border-border" />
+      {professionals.map((p) => (
+        <div
+          key={p.id}
+          className="truncate border-b border-l border-border px-2 py-2 text-xs font-medium sm:px-3 sm:text-sm"
+        >
+          <span
+            className="mr-2 inline-block h-2 w-2 rounded-full align-middle"
+            style={{ background: p.color }}
+          />
+          {p.specialty ? <span className="text-muted-foreground">{p.specialty} · </span> : null}
+          <span className="font-mono text-[10px] text-muted-foreground">{p.id.slice(0, 6)}</span>
+        </div>
+      ))}
+
+      {slots.map((m, rowIndex) => (
+        <Slot
+          key={m}
+          rowIndex={rowIndex}
+          minute={m}
+          slotLabel={fmtSlot(m)}
+          date={date}
+          professionals={professionals}
+          appointments={appointments}
+          onCreate={onCreate}
+          onOpen={onOpen}
+          statusStyle={STATUS_STYLE}
+          statusLabel={statusLabel}
+        />
+      ))}
+    </div>
+  );
+}
+
 interface SlotProps {
   rowIndex: number;
   minute: number;
   slotLabel: string;
   date: Date;
-  professionals: Array<{ id: string; color: string }>;
+  professionals: Array<{ id: string; color: string; specialty?: string | null }>;
   appointments: Array<{
     id: string;
     professionalId: string;

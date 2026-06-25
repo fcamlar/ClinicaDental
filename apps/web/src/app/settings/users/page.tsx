@@ -50,15 +50,16 @@ export default function SettingsUsersPage() {
   });
 
   return (
-    <div className="space-y-6">
-      <header className="flex items-end justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">{t('title')}</h1>
-          <p className="text-muted-foreground">{t('description')}</p>
+    <div className="space-y-4 sm:space-y-6">
+      <header className="flex flex-wrap items-end justify-between gap-3">
+        <div className="min-w-0">
+          <h1 className="text-xl font-semibold tracking-tight sm:text-2xl">{t('title')}</h1>
+          <p className="text-sm text-muted-foreground">{t('description')}</p>
         </div>
         <Button onClick={() => setShowInvite((v) => !v)} className="gap-2">
           <Plus className="h-4 w-4" />
-          {t('invite')}
+          <span className="hidden sm:inline">{t('invite')}</span>
+          <span className="sm:hidden">Invitar</span>
         </Button>
       </header>
 
@@ -102,20 +103,25 @@ export default function SettingsUsersPage() {
       )}
 
       <Card>
-        <CardContent className="p-0">
+        <CardContent className="overflow-x-auto p-0">
           <Table>
             <TableHeader>
               <TableRow>
                 <TableHead>{t('tableEmail')}</TableHead>
-                <TableHead>{t('tableRole')}</TableHead>
+                <TableHead className="hidden sm:table-cell">{t('tableRole')}</TableHead>
                 <TableHead>{t('tableStatus')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {users.data?.map((u) => (
                 <TableRow key={u.id}>
-                  <TableCell className="font-medium">{u.email}</TableCell>
-                  <TableCell>{tRoles(u.role)}</TableCell>
+                  <TableCell className="font-medium">
+                    <div className="truncate">{u.email}</div>
+                    <div className="mt-0.5 text-xs text-muted-foreground sm:hidden">
+                      {tRoles(u.role)}
+                    </div>
+                  </TableCell>
+                  <TableCell className="hidden sm:table-cell">{tRoles(u.role)}</TableCell>
                   <TableCell>
                     {u.status === 'ACTIVE' && <Badge variant="success">{t('statusActive')}</Badge>}
                     {u.status === 'INVITED' && (

@@ -29,19 +29,19 @@ export default function InvoicesPage() {
   const list = trpc.billing.listInvoices.useQuery({ limit: 100 });
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-semibold tracking-tight">{t('title')}</h1>
+    <div className="space-y-4 sm:space-y-6">
+      <h1 className="text-xl font-semibold tracking-tight sm:text-2xl">{t('title')}</h1>
 
       <Card>
-        <CardContent className="p-0">
+        <CardContent className="overflow-x-auto p-0">
           <Table>
             <TableHeader>
               <TableRow>
                 <TableHead>{t('series')} / {t('number')}</TableHead>
-                <TableHead>{t('issued')}</TableHead>
+                <TableHead className="hidden sm:table-cell">{t('issued')}</TableHead>
                 <TableHead>{t('status')}</TableHead>
                 <TableHead className="text-right">{t('total')}</TableHead>
-                <TableHead className="text-right">{t('pending')}</TableHead>
+                <TableHead className="hidden md:table-cell text-right">{t('pending')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -59,8 +59,11 @@ export default function InvoicesPage() {
                         Rect.
                       </Badge>
                     )}
+                    <div className="mt-0.5 text-xs text-muted-foreground sm:hidden">
+                      {new Date(i.issuedAt).toLocaleDateString('es-ES', { dateStyle: 'short' })}
+                    </div>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="hidden sm:table-cell">
                     {new Date(i.issuedAt).toLocaleDateString('es-ES', { dateStyle: 'medium' })}
                   </TableCell>
                   <TableCell>
@@ -69,7 +72,7 @@ export default function InvoicesPage() {
                   <TableCell className="text-right tabular-nums">
                     {EURO.format(i.total / 100)}
                   </TableCell>
-                  <TableCell className="text-right tabular-nums">
+                  <TableCell className="hidden md:table-cell text-right tabular-nums">
                     {EURO.format((i.total - i.paidTotal) / 100)}
                   </TableCell>
                 </TableRow>

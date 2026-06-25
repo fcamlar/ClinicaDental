@@ -90,9 +90,9 @@ function ClinicalContent({ patientId, reason }: { patientId: string; reason: str
   });
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[280px_1fr]">
+    <div className="grid gap-4 sm:gap-6 lg:grid-cols-[280px_1fr]">
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
+        <CardHeader className="flex flex-row items-center justify-between gap-2">
           <CardTitle className="text-base">{t('visits')}</CardTitle>
           {!openVisitId && (
             <Button
@@ -224,10 +224,10 @@ function VisitDetail({ visitId, reason, onClose }: VisitDetailProps) {
   }
 
   return (
-    <div className="space-y-6">
-      <header className="flex items-center justify-between gap-3">
-        <div>
-          <h2 className="text-xl font-semibold tracking-tight">
+    <div className="space-y-4 sm:space-y-6">
+      <header className="flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h2 className="truncate text-lg font-semibold tracking-tight sm:text-xl">
             {new Date(visit.data.visit.startedAt).toLocaleString('es-ES', {
               dateStyle: 'long',
               timeStyle: 'short',
@@ -256,11 +256,13 @@ function VisitDetail({ visitId, reason, onClose }: VisitDetailProps) {
           )}
         </CardHeader>
         <CardContent>
-          <div className={isOpen ? '' : 'pointer-events-none opacity-70'}>
-            <Odontogram
-              value={localOdontogram ?? {}}
-              onChange={(s) => isOpen && setLocalOdontogram(s)}
-            />
+          <div className="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
+            <div className={isOpen ? '' : 'pointer-events-none opacity-70'}>
+              <Odontogram
+                value={localOdontogram ?? {}}
+                onChange={(s) => isOpen && setLocalOdontogram(s)}
+              />
+            </div>
           </div>
         </CardContent>
       </Card>

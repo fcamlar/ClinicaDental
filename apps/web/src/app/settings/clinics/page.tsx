@@ -51,15 +51,16 @@ export default function SettingsClinicsPage() {
   });
 
   return (
-    <div className="space-y-6">
-      <header className="flex items-end justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">{t('title')}</h1>
-          <p className="text-muted-foreground">{t('description')}</p>
+    <div className="space-y-4 sm:space-y-6">
+      <header className="flex flex-wrap items-end justify-between gap-3">
+        <div className="min-w-0">
+          <h1 className="text-xl font-semibold tracking-tight sm:text-2xl">{t('title')}</h1>
+          <p className="text-sm text-muted-foreground">{t('description')}</p>
         </div>
         <Button onClick={() => setShowCreate((v) => !v)} className="gap-2">
           <Plus className="h-4 w-4" />
-          {t('createNew')}
+          <span className="hidden sm:inline">{t('createNew')}</span>
+          <span className="sm:hidden">Nueva</span>
         </Button>
       </header>
 
@@ -103,21 +104,26 @@ export default function SettingsClinicsPage() {
       )}
 
       <Card>
-        <CardContent className="p-0">
+        <CardContent className="overflow-x-auto p-0">
           <Table>
             <TableHeader>
               <TableRow>
                 <TableHead>{t('name')}</TableHead>
-                <TableHead>{t('address')}</TableHead>
-                <TableHead>{t('timezone')}</TableHead>
+                <TableHead className="hidden md:table-cell">{t('address')}</TableHead>
+                <TableHead className="hidden sm:table-cell">{t('timezone')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {clinics.data?.map((c) => (
                 <TableRow key={c.id}>
-                  <TableCell className="font-medium">{c.name}</TableCell>
-                  <TableCell>{c.address ?? '—'}</TableCell>
-                  <TableCell>{c.timezone}</TableCell>
+                  <TableCell className="font-medium">
+                    <div>{c.name}</div>
+                    <div className="mt-0.5 text-xs text-muted-foreground md:hidden">
+                      {c.address ?? c.timezone}
+                    </div>
+                  </TableCell>
+                  <TableCell className="hidden md:table-cell">{c.address ?? '—'}</TableCell>
+                  <TableCell className="hidden sm:table-cell">{c.timezone}</TableCell>
                 </TableRow>
               ))}
             </TableBody>

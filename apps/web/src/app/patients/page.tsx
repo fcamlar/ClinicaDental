@@ -25,15 +25,14 @@ export default function PatientsListPage() {
   const items = query.length > 0 ? (search.data ?? []) : list.data?.items ?? [];
 
   return (
-    <div className="space-y-6">
-      <header className="flex items-end justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">{t('title')}</h1>
-        </div>
+    <div className="space-y-4 sm:space-y-6">
+      <header className="flex flex-wrap items-end justify-between gap-3">
+        <h1 className="text-xl font-semibold tracking-tight sm:text-2xl">{t('title')}</h1>
         <Button asChild className="gap-2">
           <Link href="/patients/new">
             <Plus className="h-4 w-4" />
-            {t('newPatient')}
+            <span className="hidden sm:inline">{t('newPatient')}</span>
+            <span className="sm:hidden">Nuevo</span>
           </Link>
         </Button>
       </header>
@@ -49,31 +48,34 @@ export default function PatientsListPage() {
       </div>
 
       <Card>
-        <CardContent className="p-0">
+        <CardContent className="overflow-x-auto p-0">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>{t('table.code')}</TableHead>
+                <TableHead className="hidden sm:table-cell">{t('table.code')}</TableHead>
                 <TableHead>{t('table.name')}</TableHead>
-                <TableHead>{t('table.phone')}</TableHead>
-                <TableHead>{t('table.email')}</TableHead>
+                <TableHead className="hidden md:table-cell">{t('table.phone')}</TableHead>
+                <TableHead className="hidden md:table-cell">{t('table.email')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {items.map((p) => (
                 <TableRow key={p.id}>
-                  <TableCell>
+                  <TableCell className="hidden sm:table-cell">
                     <Link href={`/patients/${p.id}`} className="font-mono text-xs text-primary hover:underline">
                       {p.code}
                     </Link>
                   </TableCell>
                   <TableCell className="font-medium">
                     <Link href={`/patients/${p.id}`} className="hover:underline">
-                      {p.firstName} {p.lastName}
+                      <div>{p.firstName} {p.lastName}</div>
+                      <div className="text-xs text-muted-foreground sm:hidden">
+                        {p.code} {p.phone ? `· ${p.phone}` : ''}
+                      </div>
                     </Link>
                   </TableCell>
-                  <TableCell>{p.phone ?? '—'}</TableCell>
-                  <TableCell>{p.email ?? '—'}</TableCell>
+                  <TableCell className="hidden md:table-cell">{p.phone ?? '—'}</TableCell>
+                  <TableCell className="hidden md:table-cell">{p.email ?? '—'}</TableCell>
                 </TableRow>
               ))}
               {items.length === 0 && (

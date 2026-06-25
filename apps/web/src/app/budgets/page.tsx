@@ -45,10 +45,10 @@ export default function BudgetsPage() {
   });
 
   return (
-    <div className="space-y-6">
-      <header className="flex items-end justify-between gap-3">
-        <h1 className="text-2xl font-semibold tracking-tight">{t('title')}</h1>
-        <div className="flex items-center gap-3">
+    <div className="space-y-4 sm:space-y-6">
+      <header className="flex flex-wrap items-end justify-between gap-3">
+        <h1 className="text-xl font-semibold tracking-tight sm:text-2xl">{t('title')}</h1>
+        <div className="flex flex-wrap items-center gap-2">
           <select
             value={status}
             onChange={(e) => setStatus(e.target.value)}
@@ -66,19 +66,20 @@ export default function BudgetsPage() {
           <Button asChild className="gap-2">
             <Link href="/budgets/new">
               <Plus className="h-4 w-4" />
-              {t('new')}
+              <span className="hidden sm:inline">{t('new')}</span>
+              <span className="sm:hidden">Nuevo</span>
             </Link>
           </Button>
         </div>
       </header>
 
       <Card>
-        <CardContent className="p-0">
+        <CardContent className="overflow-x-auto p-0">
           <Table>
             <TableHeader>
               <TableRow>
                 <TableHead>{t('code')}</TableHead>
-                <TableHead>{t('issued')}</TableHead>
+                <TableHead className="hidden sm:table-cell">{t('issued')}</TableHead>
                 <TableHead>{t('status')}</TableHead>
                 <TableHead className="text-right">{t('total')}</TableHead>
               </TableRow>
@@ -93,8 +94,11 @@ export default function BudgetsPage() {
                     >
                       {b.code}
                     </Link>
+                    <div className="mt-0.5 text-xs text-muted-foreground sm:hidden">
+                      {new Date(b.issuedAt).toLocaleDateString('es-ES', { dateStyle: 'short' })}
+                    </div>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="hidden sm:table-cell">
                     {new Date(b.issuedAt).toLocaleDateString('es-ES', { dateStyle: 'medium' })}
                   </TableCell>
                   <TableCell>

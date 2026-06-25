@@ -186,11 +186,11 @@ export default function NewBudgetPage() {
       </Card>
 
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
+        <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <CardTitle className="text-base">Líneas</CardTitle>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <select
-              className="h-9 rounded-md border border-input bg-background px-2 text-sm"
+              className="h-9 min-w-0 flex-1 rounded-md border border-input bg-background px-2 text-sm sm:flex-none"
               defaultValue=""
               onChange={(e) => {
                 if (e.target.value) {
@@ -224,12 +224,12 @@ export default function NewBudgetPage() {
               }
             >
               <Plus className="h-4 w-4" />
-              {t('addLine')}
+              <span className="hidden sm:inline">{t('addLine')}</span>
             </Button>
           </div>
         </CardHeader>
-        <CardContent className="p-0">
-          <Table>
+        <CardContent className="overflow-x-auto p-0">
+          <Table className="min-w-[760px]">
             <TableHeader>
               <TableRow>
                 <TableHead>Descripción</TableHead>

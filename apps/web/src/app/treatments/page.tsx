@@ -68,12 +68,13 @@ export default function TreatmentsPage() {
   });
 
   return (
-    <div className="space-y-6">
-      <header className="flex items-end justify-between">
-        <h1 className="text-2xl font-semibold tracking-tight">{t('title')}</h1>
+    <div className="space-y-4 sm:space-y-6">
+      <header className="flex flex-wrap items-end justify-between gap-3">
+        <h1 className="text-xl font-semibold tracking-tight sm:text-2xl">{t('title')}</h1>
         <Button onClick={() => setShowForm((v) => !v)} className="gap-2">
           <Plus className="h-4 w-4" />
-          {t('new')}
+          <span className="hidden sm:inline">{t('new')}</span>
+          <span className="sm:hidden">Nuevo</span>
         </Button>
       </header>
 
@@ -149,29 +150,35 @@ export default function TreatmentsPage() {
       )}
 
       <Card>
-        <CardContent className="p-0">
+        <CardContent className="overflow-x-auto p-0">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>{t('table.code')}</TableHead>
+                <TableHead className="hidden sm:table-cell">{t('table.code')}</TableHead>
                 <TableHead>{t('table.name')}</TableHead>
-                <TableHead>{t('table.category')}</TableHead>
+                <TableHead className="hidden md:table-cell">{t('table.category')}</TableHead>
                 <TableHead className="text-right">{t('table.price')}</TableHead>
-                <TableHead>{t('table.regime')}</TableHead>
-                <TableHead>{t('table.status')}</TableHead>
+                <TableHead className="hidden md:table-cell">{t('table.regime')}</TableHead>
+                <TableHead className="hidden sm:table-cell">{t('table.status')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {list.data?.map((tr) => (
                 <TableRow key={tr.id}>
-                  <TableCell className="font-mono text-xs">{tr.code}</TableCell>
-                  <TableCell className="font-medium">{tr.name}</TableCell>
-                  <TableCell>{tr.category ?? '—'}</TableCell>
+                  <TableCell className="hidden sm:table-cell font-mono text-xs">{tr.code}</TableCell>
+                  <TableCell className="font-medium">
+                    <div>{tr.name}</div>
+                    <div className="mt-0.5 text-xs text-muted-foreground sm:hidden">
+                      <span className="font-mono">{tr.code}</span>
+                      {tr.category ? ` · ${tr.category}` : ''}
+                    </div>
+                  </TableCell>
+                  <TableCell className="hidden md:table-cell">{tr.category ?? '—'}</TableCell>
                   <TableCell className="text-right tabular-nums">
                     {EURO.format(tr.defaultPrice / 100)}
                   </TableCell>
-                  <TableCell>{tR(tr.taxRegime)}</TableCell>
-                  <TableCell>
+                  <TableCell className="hidden md:table-cell">{tR(tr.taxRegime)}</TableCell>
+                  <TableCell className="hidden sm:table-cell">
                     {tr.active ? (
                       <Badge variant="success">Activo</Badge>
                     ) : (

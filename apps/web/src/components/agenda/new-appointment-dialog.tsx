@@ -64,8 +64,8 @@ export function NewAppointmentDialog({
   }
 
   return (
-    <div className="fixed inset-0 z-50 grid place-items-center bg-black/40 p-4">
-      <Card className="w-full max-w-md">
+    <div className="fixed inset-0 z-50 grid place-items-center bg-black/40 p-2 sm:p-4">
+      <Card className="max-h-[95vh] w-full max-w-md overflow-y-auto">
         <CardHeader>
           <CardTitle>{startStr}</CardTitle>
         </CardHeader>
