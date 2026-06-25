@@ -129,6 +129,25 @@ export class PrismaAppointmentRepository implements scheduling.AppointmentReposi
     return items.map(toAppointment);
   }
 
+  async listForPatient({
+    patientId,
+    from,
+    to,
+  }: {
+    patientId: string;
+    from: Date;
+    to: Date;
+  }) {
+    const items = await this.tx.appointment.findMany({
+      where: {
+        patientId,
+        AND: [{ startsAt: { lt: to } }, { endsAt: { gt: from } }],
+      },
+      orderBy: { startsAt: 'asc' },
+    });
+    return items.map(toAppointment);
+  }
+
   async listPendingReminders({
     from,
     to,

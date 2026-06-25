@@ -34,6 +34,9 @@ import {
   PrismaInvoiceSeriesRepository,
   PrismaPaymentRepository,
 } from './billing.repository.js';
+import { PrismaAnalyticsRepository } from './analytics.repository.js';
+import { PrismaPatientExportAggregator } from './patient-export.aggregator.js';
+import { PrismaPortalTokenRepository } from './portal.repository.js';
 
 /**
  * Ensambla todos los repositorios para un cliente Prisma dado.
@@ -77,6 +80,12 @@ export function makeRepositories(
     invoiceRepo: new PrismaInvoiceRepository(tx),
     invoiceSeriesRepo: new PrismaInvoiceSeriesRepository(tx),
     paymentRepo: new PrismaPaymentRepository(tx),
+    // analytics
+    analyticsRepo: new PrismaAnalyticsRepository(tx),
+    // patient export RGPD
+    patientExportAggregator: new PrismaPatientExportAggregator(tx),
+    // portal del paciente
+    portalTokenRepo: new PrismaPortalTokenRepository(tx, migrateClient),
   };
 }
 
@@ -124,3 +133,6 @@ export {
   PrismaInvoiceSeriesRepository,
   PrismaPaymentRepository,
 } from './billing.repository.js';
+export { PrismaAnalyticsRepository } from './analytics.repository.js';
+export { PrismaPatientExportAggregator } from './patient-export.aggregator.js';
+export { PrismaPortalTokenRepository } from './portal.repository.js';

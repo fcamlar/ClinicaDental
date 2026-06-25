@@ -7,6 +7,8 @@ import { filesRouter } from './files.js';
 import { schedulingRouter } from './scheduling.js';
 import { clinicalRouter } from './clinical.js';
 import { billingRouter } from './billing.js';
+import { dashboardRouter } from './dashboard.js';
+import { portalRouter } from './portal.js';
 
 /**
  * Router raíz de Castellar.
@@ -17,6 +19,7 @@ import { billingRouter } from './billing.js';
  * Sprint 3: scheduling.
  * Sprint 4: clinical.
  * Sprint 5: billing.
+ * Sprint 6: dashboard, portal, exports.
  */
 export const appRouter = router({
   health: healthRouter,
@@ -27,6 +30,8 @@ export const appRouter = router({
   scheduling: schedulingRouter,
   clinical: clinicalRouter,
   billing: billingRouter,
+  dashboard: dashboardRouter,
+  portal: portalRouter,
 });
 
 export type AppRouter = typeof appRouter;

@@ -452,3 +452,224 @@ export function makeAddMedicalAlertUseCase(deps: {
     return alert;
   };
 }
+
+// ---------- Import CSV ----------------------------------------------------
+
+export const importPatientsCsvInput = z.object({
+  clinicId: z.string().uuid(),
+  /**
+   * Filas ya parseadas en cliente. El servidor confía en el schema, no en el
+   * formato CSV original — el parser puede ser cualquiera.
+   */
+  rows: z
+    .array(
+      z.object({
+        firstName: z.string().trim().min(1).max(80),
+        lastName: z.string().trim().min(1).max(120),
+        nationalId: z.string().trim().max(40).optional(),
+        birthDate: z.string().optional(),
+        email: z.string().optional(),
+        phone: z.string().optional(),
+        city: z.string().optional(),
+        notes: z.string().optional(),
+      }),
+    )
+    .min(1)
+    .max(500),
+});
+export type ImportPatientsCsvInput = z.infer<typeof importPatientsCsvInput>;
+
+export interface ImportRowResult {
+  index: number;
+  status: 'created' | 'skipped' | 'failed';
+  reason?: string;
+  patientId?: string;
+}
+
+export function makeImportPatientsCsvUseCase(deps: {
+  patientRepo: PatientRepository;
+  audit: identity.AuditLogRepository;
+  clock: Clock;
+}) {
+  return async function importPatientsCsv(args: {
+    tenantId: string;
+    actorId: string;
+    actorRole: identity.Role;
+    input: ImportPatientsCsvInput;
+    ip: string | null;
+  }): Promise<{ created: number; skipped: number; failed: number; rows: ImportRowResult[] }> {
+    if (
+      args.actorRole !== 'OWNER' &&
+      args.actorRole !== 'ADMIN_CLINIC' &&
+      args.actorRole !== 'RECEPTION'
+    ) {
+      throw new Forbidden('Tu rol no permite importar pacientes');
+    }
+
+    const results: ImportRowResult[] = [];
+    for (let i = 0; i < args.input.rows.length; i++) {
+      const row = args.input.rows[i]!;
+      try {
+        let nationalId: string | null = null;
+        let nationalIdHash: string | null = null;
+        if (row.nationalId && row.nationalId.length > 0) {
+          const kind = classifyNationalId(row.nationalId);
+          if (!kind) {
+            results.push({ index: i, status: 'failed', reason: 'DNI/NIE/NIF inválido' });
+            continue;
+          }
+          nationalId = normalizeNationalId(row.nationalId);
+          nationalIdHash = hashNationalId(row.nationalId);
+          const existing = await deps.patientRepo.findByNationalIdHash(nationalIdHash);
+          if (existing) {
+            results.push({ index: i, status: 'skipped', reason: 'Documento ya registrado' });
+            continue;
+          }
+        }
+        const code = `P-${deps.clock.now().getUTCFullYear()}-IMP-${String(i + 1).padStart(4, '0')}`;
+        const created = await deps.patientRepo.create({
+          tenantId: args.tenantId,
+          clinicId: args.input.clinicId,
+          code,
+          firstName: row.firstName,
+          lastName: row.lastName,
+          nationalId,
+          nationalIdHash,
+          birthDate: row.birthDate ? new Date(row.birthDate) : null,
+          sex: null,
+          email: row.email ?? null,
+          phone: row.phone ?? null,
+          addressLine1: null,
+          addressLine2: null,
+          postalCode: null,
+          city: row.city ?? null,
+          country: 'ES',
+          adminNotes: row.notes ?? null,
+          gdprConsentAt: null,
+          marketingConsent: false,
+          deletedAt: null,
+        });
+        results.push({ index: i, status: 'created', patientId: created.id });
+      } catch (err) {
+        results.push({
+          index: i,
+          status: 'failed',
+          reason: err instanceof Error ? err.message : 'Error desconocido',
+        });
+      }
+    }
+
+    const created = results.filter((r) => r.status === 'created').length;
+    const skipped = results.filter((r) => r.status === 'skipped').length;
+    const failed = results.filter((r) => r.status === 'failed').length;
+
+    await deps.audit.write({
+      tenantId: args.tenantId,
+      actorId: args.actorId,
+      action: 'patient.import_csv',
+      resourceType: 'patient',
+      resourceId: null,
+      ip: args.ip,
+      userAgent: null,
+      reason: null,
+      diff: { created, skipped, failed, total: args.input.rows.length },
+    });
+
+    return { created, skipped, failed, rows: results };
+  };
+}
+
+// ---------- Export RGPD ----------------------------------------------------
+
+export const exportPatientDataInput = z.object({
+  patientId: z.string().uuid(),
+  /** Motivo obligatorio: derecho ARSULIPO debe quedar auditado. */
+  reason: z.string().trim().min(3).max(255),
+});
+export type ExportPatientDataInput = z.infer<typeof exportPatientDataInput>;
+
+/**
+ * Forma agregada con TODA la información personal del paciente. La API la
+ * empaqueta como JSON descargable. La forma es estable: si añadimos secciones
+ * en futuras versiones, versionamos con `version`.
+ */
+export interface PatientDataExport {
+  version: 1;
+  exportedAt: string;
+  reason: string;
+  patient: Patient;
+  consents: unknown[];
+  alerts: unknown[];
+  files: unknown[];
+  clinicalRecord: unknown;
+  visits: unknown[];
+  notes: unknown[];
+  odontograms: unknown[];
+  budgets: unknown[];
+  invoices: unknown[];
+  payments: unknown[];
+  appointments: unknown[];
+}
+
+/**
+ * Provee acceso solo-lectura cross-context para construir el export.
+ * Su implementación vive en `packages/db` y compone múltiples repos en
+ * una sola transacción.
+ */
+export interface PatientExportAggregator {
+  fetch(args: { patientId: string }): Promise<Omit<PatientDataExport, 'version' | 'exportedAt' | 'reason'>>;
+}
+
+export function makeExportPatientDataUseCase(deps: {
+  patientRepo: PatientRepository;
+  aggregator: PatientExportAggregator;
+  audit: identity.AuditLogRepository;
+  clock: Clock;
+}) {
+  return async function exportPatientData(args: {
+    tenantId: string;
+    actorId: string;
+    actorRole: identity.Role;
+    input: ExportPatientDataInput;
+    ip: string | null;
+    userAgent: string | null;
+  }): Promise<PatientDataExport> {
+    if (args.actorRole !== 'OWNER' && args.actorRole !== 'ADMIN_CLINIC') {
+      throw new Forbidden('Tu rol no permite exportar datos personales');
+    }
+    const patient = await deps.patientRepo.findById(args.input.patientId);
+    if (!patient) throw new NotFound('Paciente');
+
+    const aggregate = await deps.aggregator.fetch({ patientId: patient.id });
+
+    await deps.audit.write({
+      tenantId: args.tenantId,
+      actorId: args.actorId,
+      action: 'patient.export',
+      resourceType: 'patient',
+      resourceId: patient.id,
+      ip: args.ip,
+      userAgent: args.userAgent,
+      reason: args.input.reason,
+      diff: null,
+    });
+
+    return {
+      version: 1,
+      exportedAt: deps.clock.now().toISOString(),
+      reason: args.input.reason,
+      patient,
+      consents: aggregate.consents,
+      alerts: aggregate.alerts,
+      files: aggregate.files,
+      clinicalRecord: aggregate.clinicalRecord,
+      visits: aggregate.visits,
+      notes: aggregate.notes,
+      odontograms: aggregate.odontograms,
+      budgets: aggregate.budgets,
+      invoices: aggregate.invoices,
+      payments: aggregate.payments,
+      appointments: aggregate.appointments,
+    };
+  };
+}

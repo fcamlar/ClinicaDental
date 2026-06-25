@@ -118,6 +118,29 @@ enum UserStatus {
   @@map("user_status")
 }
 
+/// Token de acceso al portal del paciente. La clínica lo genera y se envía
+/// por email/SMS; el paciente lo canjea por una sesión de corta duración.
+/// No tiene cuenta Supabase Auth: la autenticación es por token.
+model PortalAccessToken {
+  id        String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  tenantId  String   @map("tenant_id") @db.Uuid
+  patientId String   @map("patient_id") @db.Uuid
+  /// Hash SHA-256 del token de un solo uso. El token plano se envía al
+  /// paciente y no se persiste.
+  tokenHash String   @unique @map("token_hash")
+  /// Validez del enlace.
+  expiresAt DateTime @map("expires_at")
+  /// Uno o más usos permitidos (default 5: ver citas, descargar factura, etc.).
+  usesLeft  Int      @default(5) @map("uses_left")
+  createdAt DateTime @default(now()) @map("created_at")
+  /// Última vez que el paciente lo presentó.
+  lastUsedAt DateTime? @map("last_used_at")
+  revokedAt DateTime? @map("revoked_at")
+
+  @@index([tenantId, patientId])
+  @@map("portal_access_tokens")
+}
+
 /// Sala / gabinete físico dentro de una sede.
 model Room {
   id        String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid

@@ -5,9 +5,9 @@
 
 | Proveedor          | Servicio                  | Región tratamiento | DPA firmado        | Transferencia internacional |
 | ------------------ | ------------------------- | ------------------ | ------------------ | --------------------------- |
-| Supabase Inc.      | BD Postgres + Auth        | eu-west-2 (Irlanda)| ✓ (DPA Supabase)   | No                          |
+| Supabase Inc.      | BD Postgres + Auth        | eu-central-1 (Frankfurt) | ✓ (DPA Supabase)   | No                          |
 | Cloudflare, Inc.   | CDN + Pages + R2 storage  | UE (Frankfurt/Madrid edge) | ✓ (DPA Cloudflare) | EE.UU. — Standard Contractual Clauses + EU-US DPF |
-| Render Services    | Hosting API + worker      | Frankfurt          | ✓ (DPA Render)     | No                          |
+| Render Services    | Hosting API + worker      | Frankfurt (eu-central) | ✓ (DPA Render)     | No                          |
 | Upstash, Inc.      | Redis colas               | eu-west-1 (Irlanda)| ✓ (DPA Upstash)    | No                          |
 | Resend, Inc.       | Email transaccional       | UE (Frankfurt)     | ✓ (DPA Resend)     | No                          |
 | Sentry (Functional SW) | Errores y trazas      | UE (Frankfurt)     | ✓ (DPA Sentry EU)  | No                          |

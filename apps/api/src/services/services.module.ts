@@ -19,6 +19,7 @@ import type {
 } from '@castellar/api-contracts';
 import { SupabaseAdminAdapter } from './supabase-admin.js';
 import { ResendInvitationMailer } from './mailer.js';
+import { ResendPortalMailer } from './portal-mailer.js';
 
 const BUCKET = process.env.S3_BUCKET ?? 'castellar-dev';
 
@@ -111,6 +112,7 @@ export class ServicesProvider implements OnModuleDestroy {
   private readonly migrateClient: PrismaClient;
   private readonly supabase: identity.SupabaseAdminClient;
   private readonly mailer: identity.InvitationMailer;
+  private readonly portalMailer: ResendPortalMailer;
   private readonly presignedUploads: PresignedUploadService;
 
   constructor() {
@@ -123,6 +125,7 @@ export class ServicesProvider implements OnModuleDestroy {
     this.migrateClient = new PrismaClient({ datasourceUrl: migrateUrl });
     this.supabase = new SupabaseAdminAdapter();
     this.mailer = new ResendInvitationMailer();
+    this.portalMailer = new ResendPortalMailer();
     this.presignedUploads = new PresignedUploadAdapter();
   }
 
@@ -154,6 +157,7 @@ export class ServicesProvider implements OnModuleDestroy {
             ...repos,
             supabase: this.supabase,
             mailer: this.mailer,
+            portalMailer: this.portalMailer,
             resolveTimezone: async (clinicId: string) => {
               const clinic = await repos.clinicRepo.findById(clinicId);
               return clinic?.timezone ?? 'Europe/Madrid';
@@ -170,6 +174,7 @@ export class ServicesProvider implements OnModuleDestroy {
               ...repos,
               supabase: this.supabase,
               mailer: this.mailer,
+              portalMailer: this.portalMailer,
               resolveTimezone: async (clinicId: string) => {
                 const clinic = await repos.clinicRepo.findById(clinicId);
                 return clinic?.timezone ?? 'Europe/Madrid';

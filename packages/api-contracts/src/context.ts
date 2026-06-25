@@ -12,6 +12,8 @@ import type {
   scheduling,
   clinical,
   billing,
+  analytics,
+  portal,
   Clock,
   TokenGenerator,
 } from '@castellar/core';
@@ -87,6 +89,14 @@ export interface TenantDeps {
   invoiceRepo: billing.InvoiceRepository;
   invoiceSeriesRepo: billing.InvoiceSeriesRepository;
   paymentRepo: billing.PaymentRepository;
+  // Analytics
+  analyticsRepo: analytics.AnalyticsRepository;
+  // Patient export RGPD
+  patientExportAggregator: patients.PatientExportAggregator;
+  // Portal del paciente
+  portalTokenRepo: portal.PortalTokenRepository;
+  /** Mailer del portal — implementado en apps/api. */
+  portalMailer: portal.PortalMailer;
   /** Resolver de timezone de una clínica concreta. */
   resolveTimezone: (clinicId: string) => Promise<string>;
 }

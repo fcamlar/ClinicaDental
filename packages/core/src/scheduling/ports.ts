@@ -35,6 +35,8 @@ export interface AppointmentRepository {
     professionalId?: string;
     roomId?: string;
   }): Promise<Appointment[]>;
+  /** Citas de un paciente en una ventana — usado por el portal del paciente. */
+  listForPatient(args: { patientId: string; from: Date; to: Date }): Promise<Appointment[]>;
   /**
    * Devuelve citas que necesitan recordatorio: status SCHEDULED/CONFIRMED,
    * starts_at en (now+23h, now+25h], remindedAt = NULL.

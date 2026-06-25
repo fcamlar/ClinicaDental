@@ -195,4 +195,53 @@ export const patientsRouter = router({
         return { ok: true };
       });
     }),
+
+  /**
+   * Export RGPD del paciente (ARSULIPO — derecho de acceso y portabilidad).
+   * Devuelve un JSON con todas las áreas asociadas al paciente y deja
+   * entrada de auditoría con el motivo.
+   */
+  exportData: protectedProcedure
+    .input(patients.exportPatientDataInput)
+    .mutation(async ({ ctx, input }) => {
+      return runUseCase(() =>
+        ctx.services.inTenant(async (deps) => {
+          const useCase = patients.makeExportPatientDataUseCase({
+            patientRepo: deps.patientRepo,
+            aggregator: deps.patientExportAggregator,
+            audit: deps.audit,
+            clock: ctx.services.clock,
+          });
+          return useCase({
+            tenantId: ctx.tenantId,
+            actorId: ctx.user.id,
+            actorRole: ctx.user.role,
+            input,
+            ip: ctx.ip,
+            userAgent: ctx.userAgent,
+          });
+        }),
+      );
+    }),
+
+  importCsv: protectedProcedure
+    .input(patients.importPatientsCsvInput)
+    .mutation(async ({ ctx, input }) => {
+      return runUseCase(() =>
+        ctx.services.inTenant(async (deps) => {
+          const useCase = patients.makeImportPatientsCsvUseCase({
+            patientRepo: deps.patientRepo,
+            audit: deps.audit,
+            clock: ctx.services.clock,
+          });
+          return useCase({
+            tenantId: ctx.tenantId,
+            actorId: ctx.user.id,
+            actorRole: ctx.user.role,
+            input,
+            ip: ctx.ip,
+          });
+        }),
+      );
+    }),
 });
