@@ -36,8 +36,7 @@ export default function ImportPage() {
   });
 
   function parse(): Array<Record<string, string>> {
-    const lines = csv.trim().split('
-').filter(Boolean);
+    const lines = csv.trim().split('\n').filter(Boolean);
     if (lines.length === 0) return [];
     const headers = lines[0]!.split(',').map((h) => h.trim());
     const out: Array<Record<string, string>> = [];
